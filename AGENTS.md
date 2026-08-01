@@ -1,5 +1,7 @@
 # Obsidian community plugin
 
+> **Before making any change, read [`CONVENTIONS.md`](./CONVENTIONS.md).** It describes the project-specific design rules, the configurable-property requirement, the SVG ID uniqueness requirement, the shape system, and other guidance that applies on top of the general instructions below.
+
 ## Project overview
 
 - Target: Obsidian Community Plugin (TypeScript → bundled JavaScript).
@@ -12,8 +14,6 @@
 - **Package manager: npm** (required for this sample - `package.json` defines npm scripts and dependencies).
 - **Bundler: esbuild** (required for this sample - `esbuild.config.mjs` and build scripts depend on it). Alternative bundlers like Rollup or webpack are acceptable for other projects if they bundle all external dependencies into `main.js`.
 - Types: `obsidian` type definitions.
-
-**Note**: This sample project has specific technical dependencies on npm and esbuild. If you're creating a plugin from scratch, you can choose different tools, but you'll need to replace the build configuration accordingly.
 
 ### Install
 
@@ -38,6 +38,12 @@ npm run build
 - ESLint is preconfigured with `eslint-plugin-obsidianmd` for Obsidian-specific rules.
 - Run `npm run lint` to lint the project.
 - A GitHub Action automatically lints every commit on all branches.
+
+## Commit messages
+
+- Follow Conventional Commits for all commits.
+- Use the format and examples in [`COMMIT_MESSAGES.md`](./COMMIT_MESSAGES.md).
+- Reference: https://www.conventionalcommits.org/en/v1.0.0/
 
 ## File & folder conventions
 
