@@ -20,3 +20,10 @@ data.json
 
 # Exclude macOS Finder (System Explorer) View States
 .DS_Store
+
+# Exclude Demo Vault Files
+demo-vault/.obsidian/plugins/sketch-matter/main.js
+demo-vault/.obsidian/plugins/sketch-matter/manifest.json
+demo-vault/.obsidian/plugins/sketch-matter/styles.css
+demo-vault/.obsidian/workspace.json
+demo-vault/*.svg

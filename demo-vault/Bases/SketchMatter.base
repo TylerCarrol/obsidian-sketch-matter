@@ -1,0 +1,112 @@
+properties:
+  note.sketchmatter-layer:
+    displayName: Layer
+  note.sketchmatter-coordinates:
+    displayName: Coordinates
+  note.sketchmatter-image-id:
+    displayName: Image ID
+  note.sketchmatter-seed:
+    displayName: Seed
+  note.sketchmatter-magnitude:
+    displayName: Magnitude
+  note.sketchmatter-noise:
+    displayName: Noise
+  note.sketchmatter-opacity:
+    displayName: Opacity
+  note.sketchmatter-mask:
+    displayName: Mask
+  note.sketchmatter-blend:
+    displayName: Blend
+  note.sketchmatter-overlap-pattern:
+    displayName: Overlap pattern
+  note.sketchmatter-overlap-thickness:
+    displayName: Overlap thickness
+  note.sketchmatter-overlap-spacing:
+    displayName: Overlap spacing
+  note.sketchmatter-overlap-angle:
+    displayName: Overlap angle
+  note.sketchmatter-overlap-color:
+    displayName: Overlap color
+  note.sketchmatter-texture:
+    displayName: Texture
+  note.sketchmatter-fill:
+    displayName: Fill
+  note.sketchmatter-stroke:
+    displayName: Stroke
+  note.sketchmatter-stroke-width:
+    displayName: Stroke Width
+  note.sketchmatter-width:
+    displayName: Width
+  note.sketchmatter-height:
+    displayName: Height
+  note.sketchmatter-background-color:
+    displayName: Background Color
+  note.sketchmatter-background-image:
+    displayName: Background Image
+  note.sketchmatter-view-name:
+    displayName: View Name
+  note.sketchmatter-image-ids:
+    displayName: Image ID's
+  note.includeLayers:
+    displayName: Include Layers
+  note.excludeLayers:
+    displayName: Exclude Layers
+views:
+  - type: table
+    name: Objects
+    filters:
+      and:
+        - file.hasTag("sketchmatter-type")
+    groupBy:
+      property: sketchmatter-image-id
+      direction: ASC
+    order:
+      - file.name
+      - tags
+      - sketchmatter-layer
+      - sketchmatter-coordinates
+      - sketchmatter-magnitude
+      - sketchmatter-noise
+      - sketchmatter-seed
+      - sketchmatter-blend
+      - sketchmatter-overlap-pattern
+      - sketchmatter-overlap-thickness
+      - sketchmatter-overlap-spacing
+      - sketchmatter-overlap-angle
+      - sketchmatter-overlap-color
+      - sketchmatter-mask
+      - sketchmatter-opacity
+      - sketchmatter-texture
+      - sketchmatter-stroke
+      - sketchmatter-stroke-width
+      - sketchmatter-fill
+    sort: []
+    columnSize:
+      note.tags: 393
+      note.sketchmatter-coordinates: 310
+  - type: table
+    name: Images
+    filters:
+      and:
+        - file.hasTag("sketchmatter-image")
+    order:
+      - file.name
+      - sketchmatter-height
+      - sketchmatter-width
+      - sketchmatter-background-color
+      - sketchmatter-background-image
+    cardSize: 800
+  - type: table
+    name: Views
+    filters:
+      and:
+        - file.hasTag("sketchmatter-view")
+    order:
+      - file.name
+      - sketchmatter-view-name
+      - sketchmatter-image-ids
+      - includeLayers
+      - excludeLayers
+    columnSize:
+      file.name: 232
+      note.includeLayers: 144

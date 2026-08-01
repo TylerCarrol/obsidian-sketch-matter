@@ -1,0 +1,23 @@
+{
+  "types": {
+    "aliases": "aliases",
+    "cssclasses": "multitext",
+    "tags": "tags",
+    "sketchmatter-image-id": "multitext",
+    "sketchmatter-coordinates": "multitext",
+    "sketchmatter-label-coordinates": "multitext",
+    "sketchmatter-label-text": "text",
+    "sketchmatter-font-family": "text",
+    "sketchmatter-font-size": "number",
+    "sketchmatter-font-style": "multitext",
+    "sketchmatter-font-color": "text",
+    "sketchmatter-seed": "text",
+    "sketchmatter-magnitude": "number",
+    "sketchmatter-noise": "number",
+    "sketchmatter-width": "number",
+    "sketchmatter-height": "number",
+    "sketchmatter-background-color": "text",
+    "sketchmatter-background-image": "text",
+    "sketchmatter-preserve-aspect-ratio": "text"
+  }
+}
