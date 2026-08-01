@@ -1,92 +1,299 @@
-# Obsidian Sample Plugin
+# SketchMatter Plugin for Obsidian
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+![sketch-matter logo](./demo-vault/sketch-matter-export-all-logo.svg)
+> This logo was created using this plugin and is available in the `/demo-vault`
 
-This project uses TypeScript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in TypeScript Definition format, which contains TSDoc comments describing what it does.
+**SketchMatter** renders SVG images from the frontmatter in Obsidian notes.
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
+## Examples
 
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open modal (simple)" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and outputs a Notice on click.
-- Registers a global interval which logs 'setInterval' to the console.
+> The following examples are available in the `/demo-vault`
 
-## First time developing plugins?
+![](./demo-vault/sketch-matter-export-political-fantasy_map.svg)
+![](./demo-vault/sketch-matter-export-geography-earth.svg)
+![](./demo-vault/sketch-matter-export-political-earth.svg)
 
-Quick starting guide for new plugin devs:
+## Features
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `src/main.ts` to `main.js`.
-- Make changes to `src/main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+### Preview Panel
 
-## Releasing new releases
+- View image preview
+- Edit by drag-and-drop
+- Toggle a customizable grid
+- Zoom and pan
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
+### Export
 
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
+- Export a render as **SVG**
 
-## Adding your plugin to the community plugin list
+### Inline Code Block
 
-- Check the [plugin guidelines](https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines).
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+- Select an **image** and *optional* **view** to render directly in a note
 
-## How to use
+### Details
 
-- Clone this repo.
-- Make sure your NodeJS is at least v18 (`node --version`).
-- `npm i` to install dependencies.
-- `npm run dev` to start compilation in watch mode.
+- Draw [objects](#object-notes) from note frontmatter
+	- Support built-in shapes: `polygon`, `polyline`, `line`, `circle`, `rect`, `ellipse`, `text`, and `composite`
+	- Create [type definitions](#type-definitions) to extend base shapes, or *other* type definitions
+- Order objects by **layer**
+- Filter objects by **layer** using **views**
+- **Blend** to soften edges
+- **Mask** to keep items within certain bounds
+- **Noise** to create jagged edges from a **seed**
 
-## Manually installing the plugin
+## Object notes
 
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
+An object note usually contains:
 
-## Improve code quality with eslint
+- a type tag such as `sketchmatter-type/continent`
+- *optionally* additional type tags when the same note should render as **multiple** objects
+- coordinates
+- optional label coordinates for label rendering
+- an optional layer override
+- optional image IDs
+- optional style overrides such as `fill`, `stroke`, `strokeWidth`, and `opacity`
 
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code.
-- This project already has eslint preconfigured, you can invoke a check by running`npm run lint`
-- Together with a custom eslint [plugin](https://github.com/obsidianmd/eslint-plugin) for Obsidan specific code guidelines.
-- A GitHub action is preconfigured to automatically lint every commit on all branches.
+Example:
 
-## Funding URL
-
-You can include funding URLs where people who use your plugin can financially support it.
-
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
-
-```json
-{
-	"fundingUrl": "https://buymeacoffee.com"
-}
+```yaml
+---
+tags:
+  - sketchmatter-type/continent
+  - sketchmatter-type/label
+sketchmatter-layer: 100
+sketchmatter-coordinates:
+  - "100, 100"
+  - "300, 120"
+  - "360, 240"
+  - "220, 300"
+sketchmatter-label-coordinates:
+  - "240, 190"
+sketchmatter-label-text: Sunreach
+sketchmatter-font-family: Georgia
+sketchmatter-font-size: 24
+sketchmatter-font-style:
+  - bold
+  - italic
+sketchmatter-font-color: "#4b2d12"
+sketchmatter-image-id: map1
+---
 ```
 
-If you have multiple URLs, you can also do:
+`sketchmatter-image-id` can be a single ID, a comma-separated string, or a YAML array when one object belongs to multiple images.
 
-```json
-{
-	"fundingUrl": {
-		"Buy Me a Coffee": "https://buymeacoffee.com",
-		"GitHub Sponsor": "https://github.com/sponsors",
-		"Patreon": "https://www.patreon.com/"
-	}
-}
+Coordinates are interpreted by the resolved shape renderer. Type definitions in plugin settings provide the usual shape and style defaults, and object-level frontmatter can override them. If a note has multiple matching type tags, SketchMatter emits one object per type tag so a single note can render, for example, both a continent polygon and its label.
+
+## Type definitions
+
+Type definitions are configured in **Settings → Community plugins → SketchMatter**.
+
+Each type definition can specify:
+
+- **Type name**
+- **Extends** for inherited defaults
+- **Shape**
+- **Default layer**
+- **Layer override property** (optional, type-specific layer frontmatter key such as `sketchmatter-label-layer`)
+- **Style JSON**
+- optional extra properties consumed by a shape
+
+The default settings include:
+
+- a `label` type definition that uses the built-in `text` shape and reads its position from `sketchmatter-label-coordinates`
+- a `city` type definition that uses the built-in `composite` shape for a marker symbol
+
+If a shape is not explicitly set, SketchMatter can infer one from the coordinate structure.
+
+## View definitions
+
+View definition notes are tagged like this:
+
+```yaml
+tags:
+  - sketchmatter-view/political
 ```
 
-## API Documentation
+Supported frontmatter:
 
-See https://docs.obsidian.md
+- `includeLayers`
+- `excludeLayers`
+- `includeImageIds`
+- `excludeImageIds`
+
+Example:
+
+```yaml
+---
+tags:
+  - sketchmatter-view/political
+includeLayers: 100-400
+includeImageIds:
+  - map3
+---
+```
+
+Views can be selected in the panel or referenced from a `sketchmatter` code block.
+
+## Image definitions
+
+Image definition notes are tagged like this:
+
+```yaml
+tags:
+  - sketchmatter-image/map2
+```
+
+Supported frontmatter:
+
+- `sketchmatter-width`
+- `sketchmatter-height`
+- `sketchmatter-background-color`
+- `sketchmatter-background-image`
+- `sketchmatter-preserve-aspect-ratio`
+
+`sketchmatter-background-image` accepts vault assets, wikilinks, absolute URLs, and data URLs.
+
+## Embedding in notes
+
+Use a `sketchmatter` code block:
+
+```sketchmatter
+image: map1
+view: political
+```
+
+Supported parameters:
+
+- `image`
+- `view`
+
+Both are optional. The `view` value is case-insensitive. If an image is omitted, SketchMatter will try to resolve one from the selected view or the filtered objects.
+
+## Styling and advanced rendering
+
+In addition to type-definition styles, object notes can opt into:
+
+- **Opacity** with `sketchmatter-opacity`
+- **Texture fills** with `sketchmatter-texture`
+- **Masks** with `sketchmatter-mask`
+- **Soft-edge blending** with `sketchmatter-blend` and `sketchmatter-blend-radius`
+- **Overlap-only patterns** with `sketchmatter-overlap-pattern`, `sketchmatter-overlap-thickness`, `sketchmatter-overlap-spacing`, `sketchmatter-overlap-angle`, and `sketchmatter-overlap-color`
+- **Deterministic edge noise** with `sketchmatter-seed`, `sketchmatter-magnitude`, and `sketchmatter-noise`
+- **Label text** with `sketchmatter-label-text`
+- **Label font family, size, style list, and color** with `sketchmatter-font-family`, `sketchmatter-font-size`, `sketchmatter-font-style`, and `sketchmatter-font-color`
+
+`sketchmatter-texture` accepts the same asset forms as background images: vault paths, wikilinks, absolute URLs, and data URLs.
+
+Mask selectors can target:
+
+- `type:<type-name>`
+- `file:<path-or-basename>`
+- a plain value matched against type or file name, such as `continent`
+
+Overlap patterns are drawn only where objects of the same type intersect. Supported pattern values are:
+
+- `lines`
+- `hatch`
+- `crosshatch`
+- `dots`
+
+For `lines`, use `sketchmatter-overlap-angle` to rotate the line direction (degrees, default `0`).
+
+## Exporting SVG
+
+In the panel, select **Export SVG** to write the current render to the vault root.
+
+Typical filenames look like:
+
+- `sketch-matter-export-all.svg`
+- `sketch-matter-export-political-map1.svg`
+
+## Configurable property names
+
+All user-facing frontmatter and tag-prefix keys are configurable in plugin settings. The defaults include:
+
+- `sketchmatter-type`
+- `sketchmatter-view`
+- `sketchmatter-image`
+- `sketchmatter-layer`
+- `sketchmatter-coordinates`
+- `sketchmatter-image-id`
+- `sketchmatter-label-coordinates`
+- `sketchmatter-label-text`
+- `sketchmatter-font-family`
+- `sketchmatter-font-size`
+- `sketchmatter-font-style`
+- `sketchmatter-font-color`
+- `sketchmatter-width`
+- `sketchmatter-height`
+- `sketchmatter-background-color`
+- `sketchmatter-background-image`
+- `sketchmatter-preserve-aspect-ratio`
+- `sketchmatter-opacity`
+- `sketchmatter-texture`
+- `sketchmatter-mask`
+- `sketchmatter-seed`
+- `sketchmatter-magnitude`
+- `sketchmatter-noise`
+- `sketchmatter-blend`
+- `sketchmatter-blend-radius`
+- `sketchmatter-overlap-pattern`
+- `sketchmatter-overlap-thickness`
+- `sketchmatter-overlap-spacing`
+- `sketchmatter-overlap-angle`
+- `sketchmatter-overlap-color`
+- `sketchmatter-fill`
+- `sketchmatter-stroke`
+- `sketchmatter-stroke-width`
+- `defaultLayer`: `1000` (fallback layer for objects with no layer set)
+
+## Install for development
+
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+2. Build the plugin:
+   ```bash
+   npm run build
+   ```
+3. Copy `main.js`, `manifest.json`, and `styles.css` to:
+   ```text
+   <Vault>/.obsidian/plugins/sketch-matter/
+   ```
+4. In Obsidian, enable **Settings → Community plugins → SketchMatter**.
+5. Run **SketchMatter: Open panel** from the command palette.
+
+For watch mode during development:
+
+```bash
+npm run dev
+```
+
+## Fastest way to try it
+
+This repository includes a ready-made demo vault in `/demo-vault`.
+
+- Windows/PowerShell:
+  ```powershell
+  .\scripts\build-to-demo-vault.ps1
+  ```
+- Any platform:
+  1. Run `npm run build`
+  2. Copy `main.js`, `manifest.json`, and `styles.css` to `demo-vault/.obsidian/plugins/sketch-matter/`
+  3. Open `demo-vault` in Obsidian
+
+See `demo-vault/README.md` for a guided walkthrough.
+
+## How the plugin is organized
+
+**SketchMatter** works with three note types:
+
+1. **Object notes**  
+   Notes tagged with the configured type-tag prefix become drawable objects.
+2. **View definition notes**  
+   Notes tagged with the configured view-tag prefix filter objects by layer and image ID.
+3. **Image definition notes**  
+   Notes tagged with the configured image-tag prefix define SVG-wide settings such as size and background.
+
+At render time, the plugin collects objects, applies any selected view and image filters, resolves shapes and styling, and renders the matching objects into one SVG.
