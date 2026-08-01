@@ -202,11 +202,37 @@ for (const definition of settings.typeDefinitions) {
 return result;
 }
 
+function getCachedMarkdownFiles(app: App): TFile[] {
+	type MetadataCacheWithCachedFiles = {
+		getCachedFiles: () => string[];
+	};
+
+	const metadataCache = app.metadataCache as App['metadataCache'] & Partial<MetadataCacheWithCachedFiles>;
+	const cachedPaths = (typeof metadataCache.getCachedFiles === 'function')
+		? metadataCache.getCachedFiles()
+		: Array.from(
+			new Set([
+				...Object.keys(app.metadataCache.resolvedLinks),
+				...Object.keys(app.metadataCache.unresolvedLinks),
+			]),
+		);
+
+	const files: TFile[] = [];
+	for (const path of cachedPaths) {
+		const file = app.vault.getAbstractFileByPath(path);
+		if (file instanceof TFile && file.extension === 'md') {
+			files.push(file);
+		}
+	}
+
+	return files;
+}
+
 export function collectSketchMatterObjects(app: App, settings: SketchMatterSettings): SketchMatterObject[] {
 const typeDefinitions = collectSketchMatterTypeDefinitions(settings);
 const result: SketchMatterObject[] = [];
 
-for (const file of app.vault.getMarkdownFiles()) {
+for (const file of getCachedMarkdownFiles(app)) {
 	const cache = app.metadataCache.getFileCache(file);
 	if (!cache?.frontmatter) {
 		continue;
@@ -289,7 +315,7 @@ return result;
 export function collectSketchMatterViewDefinitions(app: App, settings: SketchMatterSettings): SketchMatterViewDefinition[] {
 const result: SketchMatterViewDefinition[] = [];
 
-for (const file of app.vault.getMarkdownFiles()) {
+for (const file of getCachedMarkdownFiles(app)) {
 const cache = app.metadataCache.getFileCache(file);
 if (!cache?.frontmatter) {
 continue;
@@ -325,7 +351,7 @@ return result;
 export function collectSketchMatterImageDefinitions(app: App, settings: SketchMatterSettings): Map<string, SketchMatterImageDefinition> {
 const result = new Map<string, SketchMatterImageDefinition>();
 
-for (const file of app.vault.getMarkdownFiles()) {
+for (const file of getCachedMarkdownFiles(app)) {
 const cache = app.metadataCache.getFileCache(file);
 if (!cache?.frontmatter) {
 continue;

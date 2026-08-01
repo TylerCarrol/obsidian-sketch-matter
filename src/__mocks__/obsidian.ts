@@ -175,6 +175,10 @@ export class MockMetadataCache {
 		return this.metadataMap.get(file.path) ?? null;
 	}
 
+	getCachedFiles(): string[] {
+		return Array.from(this.metadataMap.keys());
+	}
+
 	getFirstLinkpathDest(_linkpath: string, _sourcePath: string): TFile | null {
 		return null;
 	}

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Metadata discovery now iterates Obsidian metadata cache paths instead of calling `vault.getMarkdownFiles()` directly.
+
 ### Fixed
 
 - Removed duplicate height
