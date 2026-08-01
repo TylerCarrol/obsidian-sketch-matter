@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-08-01
+
 ### Added
 
 - Initial **SketchMatter** release for rendering SVG images from Obsidian note metadata.
@@ -18,3 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable settings for identifiers, type definitions, rendering defaults, and refresh behavior.
 - Demo vault, including a Logo demo and sample maps.
 - Automated test coverage for metadata parsing, rendering, shapes, and noise helpers.
+
+[Unreleased]: https://github.com/TylerCarrol/obsidian-sketch-matter/compare/v0.1.0...HEAD
+
+[0.1.0]: https://github.com/TylerCarrol/obsidian-sketch-matter/releases/tag/v0.1.0
