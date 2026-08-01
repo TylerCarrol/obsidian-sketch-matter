@@ -4,9 +4,15 @@ on:
     push:
         tags:
             - '*'
+    workflow_run:
+        workflows:
+            - Tag for Release
+        types:
+            - completed
 
 jobs:
     build:
+        if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
         runs-on: ubuntu-latest
         permissions:
             contents: write
@@ -14,6 +20,9 @@ jobs:
             attestations: write
         steps:
             - uses: actions/checkout@v6
+              with:
+                  ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+                  fetch-depth: 0
 
             - name: Use Node.js
               uses: actions/setup-node@v6
@@ -42,7 +51,16 @@ jobs:
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
-                  tag="${GITHUB_REF#refs/tags/}"
+                  if [ "${GITHUB_EVENT_NAME}" = "workflow_run" ]; then
+                    tag="$(node -p "require('./package.json').version")"
+                  else
+                    tag="${GITHUB_REF#refs/tags/}"
+                  fi
+
+                  if gh release view "$tag" >/dev/null 2>&1; then
+                    echo "Release $tag already exists; skipping."
+                    exit 0
+                  fi
 
                   gh release create "$tag" \
                     --title="$tag" \
