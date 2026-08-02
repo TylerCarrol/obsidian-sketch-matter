@@ -1,6 +1,11 @@
 import { ItemView, Notice, Plugin, WorkspaceLeaf, setIcon } from 'obsidian';
 import { DEFAULT_SETTINGS, SketchMatterObject, SketchMatterSettings, SketchMatterViewDefinition } from './types';
 import {
+	createImageDefinitionFlow,
+	createObjectDefinitionFlow,
+	createViewDefinitionFlow,
+} from './creation';
+import {
 	collectSketchMatterObjects,
 	collectSketchMatterTypeDefinitions,
 	collectSketchMatterViewDefinitions,
@@ -203,6 +208,40 @@ this.selector = viewLabel.createEl('select');
 this.selector.addEventListener('change', () => {
 this.currentViewId = this.selector?.value || null;
 void this.renderView();
+});
+
+const createActions = controls.createDiv({ cls: 'sketchmatter-create-actions' });
+const createImageButton = this.createPreviewButton(createActions, {
+	label: 'Create image',
+	icon: 'image-plus',
+	className: 'sketchmatter-create-image-button',
+});
+createImageButton.addEventListener('click', () => {
+	void createImageDefinitionFlow(this.app, this.plugin.settings, async () => {
+		await this.reload();
+	});
+});
+
+const createViewButton = this.createPreviewButton(createActions, {
+	label: 'Create view',
+	icon: 'file-plus-2',
+	className: 'sketchmatter-create-view-button',
+});
+createViewButton.addEventListener('click', () => {
+	void createViewDefinitionFlow(this.app, this.plugin.settings, async () => {
+		await this.reload();
+	});
+});
+
+const createObjectButton = this.createPreviewButton(createActions, {
+	label: 'Create object',
+	icon: 'box-select',
+	className: 'sketchmatter-create-object-button',
+});
+createObjectButton.addEventListener('click', () => {
+	void createObjectDefinitionFlow(this.app, this.plugin.settings, async () => {
+		await this.reload();
+	});
 });
 
 this.statusElement = this.containerEl.createDiv({ cls: 'sketchmatter-view-status' });

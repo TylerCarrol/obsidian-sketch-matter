@@ -123,12 +123,26 @@
 	justify-content: center;
 }
 
+.sketchmatter-create-actions {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+	padding: 0 10px;
+	margin: 0 2px;
+	border-left: 1px solid var(--background-modifier-border);
+}
+
 /* ── Zoom controls ───────────────────────────────────────────────── */
 
 .sketchmatter-zoom-controls {
 	display: flex;
 	align-items: center;
 	gap: 4px;
+	padding: 0 10px;
+	margin: 0 2px;
+	border-left: 1px solid var(--background-modifier-border);
+	border-right: 1px solid var(--background-modifier-border);
 }
 
 .sketchmatter-zoom-button {
@@ -459,4 +473,38 @@
 	fill-opacity: 0.35;
 	stroke: var(--interactive-accent, #7f6df2);
 	stroke-width: 1.5;
+}
+
+/* ── Creation modals ───────────────────────────────────────────── */
+
+.sketchmatter-create-form {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	padding-top: 4px;
+}
+
+.sketchmatter-create-form-field {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.sketchmatter-create-form-field input,
+.sketchmatter-create-form-field select,
+.sketchmatter-create-form-field textarea {
+	width: 100%;
+	box-sizing: border-box;
+	padding: 6px 8px;
+}
+
+.sketchmatter-create-form-field textarea {
+	resize: vertical;
+}
+
+.sketchmatter-create-form-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+	padding-top: 4px;
 }

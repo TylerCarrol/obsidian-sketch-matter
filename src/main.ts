@@ -3,6 +3,7 @@ import { DEFAULT_SETTINGS, SketchMatterSettings } from './types';
 import { SketchMatterSettingTab } from './settings';
 import { SketchMatterView, VIEW_TYPE_SKETCH_MATTER } from './view';
 import { registerCodeBlockProcessor } from './codeblock';
+import { registerCreationCommands } from './creation';
 
 export default class SketchMatterPlugin extends Plugin {
 	settings: SketchMatterSettings = DEFAULT_SETTINGS;
@@ -13,6 +14,7 @@ export default class SketchMatterPlugin extends Plugin {
 		this.addSettingTab(new SketchMatterSettingTab(this.app, this, this.settings));
 		this.registerView(VIEW_TYPE_SKETCH_MATTER, (leaf: WorkspaceLeaf) => new SketchMatterView(leaf, this));
 		registerCodeBlockProcessor(this);
+		registerCreationCommands(this);
 
 		this.addRibbonIcon('image-file', 'Open SketchMatter preview', async () => {
 			await this.openPanel();

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added `Create image` command and preview-panel button.
+- Added `Create view` command and preview-panel button.
+- Added `Create object` command and preview-panel button.
+
 ### Changed
 
 - Added configurable settings keys for view layer filters: `viewIncludeLayersProperty` and `viewExcludeLayersProperty`.
@@ -16,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Fixed release attestations
+- Fixed release attestations.
 
 ## [0.1.1] - 2026-08-02
 
@@ -26,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Removed duplicate height
+- Removed duplicate height.
 
 ## [0.1.0] - 2026-08-01
 
