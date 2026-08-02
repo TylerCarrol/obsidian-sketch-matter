@@ -9,14 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Added `Create image` command and preview-panel button.
-- Added `Create view` command and preview-panel button.
-- Added `Create object` command and preview-panel button.
+- Added **Create image** command and preview-panel button.
+- Added **Create view** command and preview-panel button.
+- Added **Create object** command and preview-panel button.
+- Added **Refresh preview** button to the preview panel.
 
 ### Changed
 
 - Added configurable settings keys for view layer filters: `viewIncludeLayersProperty` and `viewExcludeLayersProperty`.
 - Added configurable settings keys for object shape and child arrays: `objectShapeProperty` and `objectChildrenProperty`.
+
+### Fixed
+
+- Reduced preview/code-block metadata load cost by collecting object, view, and image definitions in a single pass and reusing the result within the preview panel.
 
 ## [0.1.2] - 2026-08-02
 

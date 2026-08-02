@@ -6,13 +6,12 @@ import {
 	createViewDefinitionFlow,
 } from './creation';
 import {
-	collectSketchMatterObjects,
+	collectSketchMatterMetadata,
 	collectSketchMatterTypeDefinitions,
-	collectSketchMatterViewDefinitions,
-	collectSketchMatterImageDefinitions,
 	collectAllImageIds,
 	filterByImageId,
 	filterSketchMatterObjects,
+	SketchMatterMetadataBundle,
 } from './metadata';
 import { renderSvgPreview, renderSvgToString } from './renderer';
 import {
@@ -53,6 +52,7 @@ selectedObjectPath: string | null = null;
 private editorSidebarEl: HTMLElement | null = null;
 private editorOverlayHandle: EditorOverlayHandle | null = null;
 private currentFilteredObjects: SketchMatterObject[] = [];
+private metadataBundle: SketchMatterMetadataBundle | null = null;
 private zoomResetButton: HTMLButtonElement | null = null;
 private previewPanState:
 	| {
@@ -90,7 +90,16 @@ await this.renderView();
 }
 
 async reload(): Promise<void> {
+this.metadataBundle = null;
 await this.renderView();
+}
+
+private getMetadataBundle(): SketchMatterMetadataBundle {
+	if (this.metadataBundle == null) {
+		this.metadataBundle = collectSketchMatterMetadata(this.app, this.plugin.settings);
+	}
+
+	return this.metadataBundle;
 }
 
 private async renderView(): Promise<void> {
@@ -116,6 +125,15 @@ const exportButton = this.createPreviewButton(buttonPanel, {
 });
 exportButton.addEventListener('click', () => {
 void this.exportSvg();
+});
+
+const refreshButton = this.createPreviewButton(buttonPanel, {
+	label: 'Refresh preview',
+	icon: 'refresh-cw',
+	className: 'sketchmatter-refresh-button',
+});
+refreshButton.addEventListener('click', () => {
+	void this.reload();
 });
 
 const gridButton = this.createPreviewButton(buttonPanel, {
@@ -264,12 +282,13 @@ if (this.editMode) {
 	this.editorSidebarEl = contentArea.createDiv({ cls: 'sketchmatter-editor-sidebar' });
 }
 
-const objects = collectSketchMatterObjects(this.app, this.plugin.settings);
+const metadataBundle = this.getMetadataBundle();
+const objects = metadataBundle.objects;
 const typeDefinitions = collectSketchMatterTypeDefinitions(this.plugin.settings);
-const views = collectSketchMatterViewDefinitions(this.app, this.plugin.settings);
-const imageDefinitions = collectSketchMatterImageDefinitions(this.app, this.plugin.settings);
+const views = metadataBundle.views;
+const imageDefinitions = metadataBundle.imageDefinitions;
 
-this.populateImageSelector(objects);
+this.populateImageSelector(objects, Array.from(imageDefinitions.keys()));
 this.populateViewSelector(views);
 
 const selectedView = views.find((view) => view.id === this.currentViewId) ?? null;
@@ -384,10 +403,11 @@ private renderEditorPanel(): void {
 }
 
 private async exportSvg(): Promise<void> {
-const objects = collectSketchMatterObjects(this.app, this.plugin.settings);
+const metadataBundle = this.getMetadataBundle();
+const objects = metadataBundle.objects;
 const typeDefinitions = collectSketchMatterTypeDefinitions(this.plugin.settings);
-const views = collectSketchMatterViewDefinitions(this.app, this.plugin.settings);
-const imageDefinitions = collectSketchMatterImageDefinitions(this.app, this.plugin.settings);
+const views = metadataBundle.views;
+const imageDefinitions = metadataBundle.imageDefinitions;
 
 const selectedView = views.find((view) => view.id === this.currentViewId) ?? null;
 let filteredObjects = filterSketchMatterObjects(objects, selectedView);
@@ -453,13 +473,16 @@ this.currentViewId = null;
 this.selector.disabled = visibleViews.length === 0;
 }
 
-private populateImageSelector(objects: SketchMatterObject[]): void {
+private populateImageSelector(
+	objects: SketchMatterObject[],
+	imageDefinitionIds: string[],
+): void {
 if (!this.imageSelector) {
 return;
 }
 
 this.imageSelector.innerHTML = '';
-const imageIds = collectAllImageIds(objects);
+const imageIds = Array.from(new Set([...collectAllImageIds(objects), ...imageDefinitionIds])).sort();
 
 const defaultOption = createEl('option');
 defaultOption.value = '';

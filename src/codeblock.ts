@@ -1,10 +1,8 @@
 import { App, Plugin } from 'obsidian';
 import { SketchMatterObject, SketchMatterSettings } from './types';
 import {
-	collectSketchMatterObjects,
+	collectSketchMatterMetadata,
 	collectSketchMatterTypeDefinitions,
-	collectSketchMatterViewDefinitions,
-	collectSketchMatterImageDefinitions,
 	filterByImageId,
 	filterSketchMatterObjects,
 } from './metadata';
@@ -63,10 +61,11 @@ function renderCodeBlock(
 ): void {
 	const params = parseCodeBlockParams(source);
 
-	const objects = collectSketchMatterObjects(app, settings);
+	const metadataBundle = collectSketchMatterMetadata(app, settings);
+	const objects = metadataBundle.objects;
 	const typeDefinitions = collectSketchMatterTypeDefinitions(settings);
-	const views = collectSketchMatterViewDefinitions(app, settings);
-	const imageDefinitions = collectSketchMatterImageDefinitions(app, settings);
+	const views = metadataBundle.views;
+	const imageDefinitions = metadataBundle.imageDefinitions;
 
 	const selectedView = params.view
 		? views.find((v) => v.name.toLowerCase() === params.view?.toLowerCase()) ?? null

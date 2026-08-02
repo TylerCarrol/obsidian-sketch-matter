@@ -9,6 +9,12 @@ SketchMatterViewDefinition,
 RESOLVED_TEXTURE_PROPERTY,
 } from './types';
 
+export interface SketchMatterMetadataBundle {
+	objects: SketchMatterObject[];
+	views: SketchMatterViewDefinition[];
+	imageDefinitions: Map<string, SketchMatterImageDefinition>;
+}
+
 function escapeRegExp(value: string): string {
 return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -228,53 +234,112 @@ function getCachedMarkdownFiles(app: App): TFile[] {
 	return files;
 }
 
-export function collectSketchMatterObjects(app: App, settings: SketchMatterSettings): SketchMatterObject[] {
-const typeDefinitions = collectSketchMatterTypeDefinitions(settings);
-const result: SketchMatterObject[] = [];
+	export function collectSketchMatterMetadata(app: App, settings: SketchMatterSettings): SketchMatterMetadataBundle {
+		const typeDefinitions = collectSketchMatterTypeDefinitions(settings);
+		const objects: SketchMatterObject[] = [];
+		const views: SketchMatterViewDefinition[] = [];
+		const imageDefinitions = new Map<string, SketchMatterImageDefinition>();
 
-for (const file of getCachedMarkdownFiles(app)) {
-	const cache = app.metadataCache.getFileCache(file);
-	if (!cache?.frontmatter) {
-		continue;
-	}
+		for (const file of getCachedMarkdownFiles(app)) {
+			const cache = app.metadataCache.getFileCache(file);
+			if (!cache?.frontmatter) {
+				continue;
+			}
 
-	const tags = getAllTags(cache) ?? [];
-	const typeNames = findTagSuffixes(tags, settings.typeTagPrefix).filter((typeName) => typeName.length > 0);
-	if (typeNames.length === 0) {
-		continue;
-	}
+			const tags = getAllTags(cache) ?? [];
+			const typeNames = findTagSuffixes(tags, settings.typeTagPrefix).filter((typeName) => typeName.length > 0);
+			const viewSuffix = findTagSuffix(tags, settings.viewDefinitionTagPrefix);
+			const imageSuffix = findTagSuffix(tags, settings.imageDefinitionTagPrefix);
 
-	const raw = cache.frontmatter;
-	const resolvedTexture = resolveAssetSource(app, file.path, raw[settings.textureProperty]);
-	const properties: Record<string, unknown> = {
-		...raw,
-	};
-	if (resolvedTexture) {
-		properties[RESOLVED_TEXTURE_PROPERTY] = resolvedTexture;
-	}
+			if (typeNames.length === 0 && viewSuffix === null && imageSuffix === null) {
+				continue;
+			}
 
-	for (const [index, typeName] of typeNames.entries()) {
-		const typeDefinition = typeDefinitions.get(typeName);
-		const coordinatesProperty = typeDefinition?.useLabelCoordinates
-			? settings.labelCoordinatesProperty
-			: settings.coordinatesProperty;
-		const object: SketchMatterObject = {
-			objectId: `${file.path}::${typeName}::${index}`,
-			sourcePath: file.path,
-			file,
-			typeName,
-			layer: parseLayerValue(raw, typeName, settings, typeDefinitions),
-			coordinates: parseCoordinates(raw[coordinatesProperty]),
-			coordinatesProperty,
-			imageIds: parseImageIds(raw[settings.imageIdProperty]),
-			properties,
+			const raw = cache.frontmatter;
+
+			if (typeNames.length > 0) {
+				const resolvedTexture = resolveAssetSource(app, file.path, raw[settings.textureProperty]);
+				const properties: Record<string, unknown> = {
+					...raw,
+				};
+				if (resolvedTexture) {
+					properties[RESOLVED_TEXTURE_PROPERTY] = resolvedTexture;
+				}
+
+				for (const [index, typeName] of typeNames.entries()) {
+					const typeDefinition = typeDefinitions.get(typeName);
+					const coordinatesProperty = typeDefinition?.useLabelCoordinates
+						? settings.labelCoordinatesProperty
+						: settings.coordinatesProperty;
+					const object: SketchMatterObject = {
+						objectId: `${file.path}::${typeName}::${index}`,
+						sourcePath: file.path,
+						file,
+						typeName,
+						layer: parseLayerValue(raw, typeName, settings, typeDefinitions),
+						coordinates: parseCoordinates(raw[coordinatesProperty]),
+						coordinatesProperty,
+						imageIds: parseImageIds(raw[settings.imageIdProperty]),
+						properties,
+					};
+
+					objects.push(object);
+				}
+			}
+
+			if (viewSuffix !== null) {
+				const id = file.path;
+				const nameFromProperty: unknown = raw[settings.viewNameProperty];
+				const name = (typeof nameFromProperty === 'string' && nameFromProperty.trim().length > 0)
+					? nameFromProperty.trim()
+					: (viewSuffix.length > 0 ? viewSuffix : file.basename);
+
+				views.push({
+					id,
+					name,
+					imageIds: parseImageIds(raw[settings.viewImageIdsProperty]),
+					includeLayers: parseConfiguredLayerRanges(raw, settings.viewIncludeLayersProperty, 'includeLayers'),
+					excludeLayers: parseConfiguredLayerRanges(raw, settings.viewExcludeLayersProperty, 'excludeLayers'),
+					includeImageIds: parseImageIds(raw.includeImageIds),
+					excludeImageIds: parseImageIds(raw.excludeImageIds),
+					properties: raw,
+				});
+			}
+
+			if (imageSuffix !== null) {
+				const imageIds = parseImageIds(raw[settings.imageIdProperty]);
+				if (imageIds.length > 0) {
+					const backgroundColorRaw: unknown = raw[settings.imageBackgroundColorProperty];
+					const backgroundImageRaw: unknown = raw[settings.imageBackgroundImageProperty];
+					const preserveAspectRatioRaw: unknown = raw[settings.imagePreserveAspectRatioProperty];
+
+					const baseDefinition = {
+						name: file.basename,
+						width: parsePositiveNumber(raw[settings.imageWidthProperty]),
+						height: parsePositiveNumber(raw[settings.imageHeightProperty]),
+						backgroundColor: typeof backgroundColorRaw === 'string' ? backgroundColorRaw.trim() || undefined : undefined,
+						backgroundImage: resolveAssetSource(app, file.path, backgroundImageRaw),
+						preserveAspectRatio:
+						typeof preserveAspectRatioRaw === 'string' ? preserveAspectRatioRaw.trim() || undefined : undefined,
+						properties: raw,
+					};
+
+					for (const id of imageIds) {
+						imageDefinitions.set(id, { ...baseDefinition, id });
+					}
+				}
+			}
+		}
+
+		return {
+			objects,
+			views,
+			imageDefinitions,
 		};
-
-		result.push(object);
 	}
-}
 
-return result;
+export function collectSketchMatterObjects(app: App, settings: SketchMatterSettings): SketchMatterObject[] {
+		return collectSketchMatterMetadata(app, settings).objects;
 }
 
 function parseLayerRangeEntry(raw: unknown): LayerRange[] {
@@ -330,83 +395,11 @@ function parseConfiguredLayerRanges(
 }
 
 export function collectSketchMatterViewDefinitions(app: App, settings: SketchMatterSettings): SketchMatterViewDefinition[] {
-const result: SketchMatterViewDefinition[] = [];
-
-for (const file of getCachedMarkdownFiles(app)) {
-const cache = app.metadataCache.getFileCache(file);
-if (!cache?.frontmatter) {
-continue;
-}
-
-const tags = getAllTags(cache) ?? [];
-const viewSuffix = findTagSuffix(tags, settings.viewDefinitionTagPrefix);
-if (viewSuffix === null) {
-continue;
-}
-
-const id = file.path;
-const nameFromProperty: unknown = cache.frontmatter[settings.viewNameProperty];
-const name = (typeof nameFromProperty === 'string' && nameFromProperty.trim().length > 0)
-	? nameFromProperty.trim()
-	: (viewSuffix.length > 0 ? viewSuffix : file.basename);
-
-result.push({
-id,
-name,
-imageIds: parseImageIds(cache.frontmatter[settings.viewImageIdsProperty]),
-includeLayers: parseConfiguredLayerRanges(cache.frontmatter, settings.viewIncludeLayersProperty, 'includeLayers'),
-excludeLayers: parseConfiguredLayerRanges(cache.frontmatter, settings.viewExcludeLayersProperty, 'excludeLayers'),
-includeImageIds: parseImageIds(cache.frontmatter.includeImageIds),
-excludeImageIds: parseImageIds(cache.frontmatter.excludeImageIds),
-properties: cache.frontmatter,
-});
-}
-
-return result;
+	return collectSketchMatterMetadata(app, settings).views;
 }
 
 export function collectSketchMatterImageDefinitions(app: App, settings: SketchMatterSettings): Map<string, SketchMatterImageDefinition> {
-const result = new Map<string, SketchMatterImageDefinition>();
-
-for (const file of getCachedMarkdownFiles(app)) {
-const cache = app.metadataCache.getFileCache(file);
-if (!cache?.frontmatter) {
-continue;
-}
-
-const tags = getAllTags(cache) ?? [];
-const imageSuffix = findTagSuffix(tags, settings.imageDefinitionTagPrefix);
-if (imageSuffix === null) {
-continue;
-}
-
-const frontmatter = cache.frontmatter;
-const imageIds = parseImageIds(frontmatter[settings.imageIdProperty]);
-if (imageIds.length === 0) {
-continue;
-}
-
-const backgroundColorRaw: unknown = frontmatter[settings.imageBackgroundColorProperty];
-const backgroundImageRaw: unknown = frontmatter[settings.imageBackgroundImageProperty];
-const preserveAspectRatioRaw: unknown = frontmatter[settings.imagePreserveAspectRatioProperty];
-
-const baseDefinition = {
-name: file.basename,
-width: parsePositiveNumber(frontmatter[settings.imageWidthProperty]),
-height: parsePositiveNumber(frontmatter[settings.imageHeightProperty]),
-backgroundColor: typeof backgroundColorRaw === 'string' ? backgroundColorRaw.trim() || undefined : undefined,
-backgroundImage: resolveAssetSource(app, file.path, backgroundImageRaw),
-preserveAspectRatio:
-typeof preserveAspectRatioRaw === 'string' ? preserveAspectRatioRaw.trim() || undefined : undefined,
-properties: frontmatter,
-};
-
-for (const id of imageIds) {
-result.set(id, { ...baseDefinition, id });
-}
-}
-
-return result;
+	return collectSketchMatterMetadata(app, settings).imageDefinitions;
 }
 
 function isLayerInRanges(layer: number, ranges: LayerRange[]): boolean {
