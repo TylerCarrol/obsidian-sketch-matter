@@ -49,12 +49,12 @@ jobs:
                     echo "value=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
                   fi
 
-            #- name: Attest build provenance
-            #  uses: actions/attest@v4
-            #  with:
-            #      subject-path: |
-            #          main.js
-            #          ${{ steps.styles.outputs.exists == 'true' && 'styles.css' || '' }}
+            - name: Attest build provenance
+              uses: actions/attest@v4
+              with:
+                  subject-path: |
+                      main.js
+                      ${{ steps.styles.outputs.exists == 'true' && 'styles.css' || '' }}
 
             - name: Build release notes from changelog
               env:
