@@ -1,6 +1,6 @@
 # SketchMatter Plugin for Obsidian
 
-[![Lint](https://github.com/TylerCarrol/obsidian-sketch-matter/actions/workflows/lint.yml/badge.svg)](https://github.com/TylerCarrol/obsidian-sketch-matter/actions/workflows/lint.yml) [![Test](https://github.com/TylerCarrol/obsidian-sketch-matter/actions/workflows/test.yml/badge.svg)](https://github.com/TylerCarrol/obsidian-sketch-matter/actions/workflows/test.yml)
+[![Version](https://img.shields.io/badge/version-0.1.1-blue.svg)](https://github.com/TylerCarrol/obsidian-sketch-matter/releases) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/TylerCarrol/obsidian-sketch-matter/blob/main/LICENSE) [![Lint](https://github.com/TylerCarrol/obsidian-sketch-matter/actions/workflows/lint.yml/badge.svg)](https://github.com/TylerCarrol/obsidian-sketch-matter/actions/workflows/lint.yml) [![Test](https://github.com/TylerCarrol/obsidian-sketch-matter/actions/workflows/test.yml/badge.svg)](https://github.com/TylerCarrol/obsidian-sketch-matter/actions/workflows/test.yml)
 
 ![sketch-matter logo](./demo-vault/sketch-matter-export-all-logo.svg)
 > This logo was created using this plugin and is available in the `/demo-vault`
