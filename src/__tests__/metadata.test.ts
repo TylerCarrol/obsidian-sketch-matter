@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
 	collectSketchMatterTypeDefinitions,
 	collectSketchMatterObjects,
+	collectSketchMatterViewDefinitions,
 	collectSketchMatterImageDefinitions,
 	filterSketchMatterObjects,
 	filterByImageId,
@@ -91,6 +92,50 @@ describe('collectSketchMatterTypeDefinitions', () => {
 		const settings = { ...DEFAULT_SETTINGS, typeDefinitions: [] };
 		const result = collectSketchMatterTypeDefinitions(settings);
 		expect(result.size).toBe(0);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// collectSketchMatterViewDefinitions
+// ---------------------------------------------------------------------------
+
+describe('collectSketchMatterViewDefinitions', () => {
+	it('reads include/exclude layer ranges from configurable property keys', () => {
+		const files = [makeFile('view.md')];
+		const metadata = new Map([
+			['view.md', {
+				frontmatter: {
+					[DEFAULT_SETTINGS.viewIncludeLayersProperty]: '100-200',
+					[DEFAULT_SETTINGS.viewExcludeLayersProperty]: '150',
+				},
+				tags: [{ tag: `#${DEFAULT_SETTINGS.viewDefinitionTagPrefix}/test-view` }],
+			}],
+		]);
+		const app = new App(files, metadata);
+
+		const views = collectSketchMatterViewDefinitions(app, DEFAULT_SETTINGS);
+		expect(views).toHaveLength(1);
+		expect(views[0]?.includeLayers).toEqual([{ min: 100, max: 200 }]);
+		expect(views[0]?.excludeLayers).toEqual([{ min: 150, max: 150 }]);
+	});
+
+	it('falls back to legacy includeLayers/excludeLayers keys when configurable keys are empty', () => {
+		const files = [makeFile('legacy-view.md')];
+		const metadata = new Map([
+			['legacy-view.md', {
+				frontmatter: {
+					includeLayers: '200-400',
+					excludeLayers: '250',
+				},
+				tags: [{ tag: `#${DEFAULT_SETTINGS.viewDefinitionTagPrefix}/legacy-view` }],
+			}],
+		]);
+		const app = new App(files, metadata);
+
+		const views = collectSketchMatterViewDefinitions(app, DEFAULT_SETTINGS);
+		expect(views).toHaveLength(1);
+		expect(views[0]?.includeLayers).toEqual([{ min: 200, max: 400 }]);
+		expect(views[0]?.excludeLayers).toEqual([{ min: 250, max: 250 }]);
 	});
 });
 

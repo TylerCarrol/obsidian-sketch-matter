@@ -117,8 +117,8 @@ tags:
 
 Supported frontmatter:
 
-- `includeLayers`
-- `excludeLayers`
+- `sketchmatter-include-layers`
+- `sketchmatter-exclude-layers`
 - `includeImageIds`
 - `excludeImageIds`
 
@@ -128,7 +128,7 @@ Example:
 ---
 tags:
   - sketchmatter-view/political
-includeLayers: 100-400
+sketchmatter-include-layers: 100-400
 includeImageIds:
   - map3
 ---

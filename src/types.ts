@@ -7,6 +7,8 @@ export interface SketchMatterSettings {
 	viewDefinitionTagPrefix: string;
 	viewNameProperty: string;
 	viewImageIdsProperty: string;
+	viewIncludeLayersProperty: string;
+	viewExcludeLayersProperty: string;
 	imageDefinitionTagPrefix: string;
 	layerProperty: string;
 	layerRenderOrder: LayerRenderOrder;
@@ -152,6 +154,8 @@ export const DEFAULT_SETTINGS: SketchMatterSettings = {
 	viewDefinitionTagPrefix: 'sketchmatter-view',
 	viewNameProperty: 'sketchmatter-view-name',
 	viewImageIdsProperty: 'sketchmatter-image-ids',
+	viewIncludeLayersProperty: 'sketchmatter-include-layers',
+	viewExcludeLayersProperty: 'sketchmatter-exclude-layers',
 	imageDefinitionTagPrefix: 'sketchmatter-image',
 	layerProperty: 'sketchmatter-layer',
 	layerRenderOrder: '0-1',

@@ -128,6 +128,10 @@ The table below maps every `SketchMatterSettings` field to its default value. Wh
 |---|---|---|
 | `typeTagPrefix` | `sketchmatter-type` | Tag prefix identifying object notes |
 | `viewDefinitionTagPrefix` | `sketchmatter-view` | Tag prefix for view definition notes |
+| `viewNameProperty` | `sketchmatter-view-name` | Frontmatter key for view display name |
+| `viewImageIdsProperty` | `sketchmatter-image-ids` | Frontmatter key for view image ID filters |
+| `viewIncludeLayersProperty` | `sketchmatter-include-layers` | Frontmatter key for view layer include ranges |
+| `viewExcludeLayersProperty` | `sketchmatter-exclude-layers` | Frontmatter key for view layer exclude ranges |
 | `imageDefinitionTagPrefix` | `sketchmatter-image` | Tag prefix for image definition notes |
 | `layerProperty` | `sketchmatter-layer` | Frontmatter key for layer number |
 | `layerRenderOrder` | `0-1` | Whether lower or higher layers render first |

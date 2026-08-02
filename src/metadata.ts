@@ -312,6 +312,23 @@ result.push({ min: valueNumber, max: valueNumber });
 return result;
 }
 
+function parseConfiguredLayerRanges(
+	frontmatter: Record<string, unknown>,
+	configuredKey: string,
+	legacyKey: string,
+): LayerRange[] {
+	const configured = parseLayerRangeEntry(frontmatter[configuredKey]);
+	if (configured.length > 0) {
+		return configured;
+	}
+
+	if (configuredKey === legacyKey) {
+		return configured;
+	}
+
+	return parseLayerRangeEntry(frontmatter[legacyKey]);
+}
+
 export function collectSketchMatterViewDefinitions(app: App, settings: SketchMatterSettings): SketchMatterViewDefinition[] {
 const result: SketchMatterViewDefinition[] = [];
 
@@ -337,8 +354,8 @@ result.push({
 id,
 name,
 imageIds: parseImageIds(cache.frontmatter[settings.viewImageIdsProperty]),
-includeLayers: parseLayerRangeEntry(cache.frontmatter.includeLayers),
-excludeLayers: parseLayerRangeEntry(cache.frontmatter.excludeLayers),
+includeLayers: parseConfiguredLayerRanges(cache.frontmatter, settings.viewIncludeLayersProperty, 'includeLayers'),
+excludeLayers: parseConfiguredLayerRanges(cache.frontmatter, settings.viewExcludeLayersProperty, 'excludeLayers'),
 includeImageIds: parseImageIds(cache.frontmatter.includeImageIds),
 excludeImageIds: parseImageIds(cache.frontmatter.excludeImageIds),
 properties: cache.frontmatter,

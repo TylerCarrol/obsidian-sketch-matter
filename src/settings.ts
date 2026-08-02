@@ -189,6 +189,16 @@ export class SketchMatterSettingTab extends PluginSettingTab {
 								'Frontmatter key listing image IDs a view applies to. When empty the view is available for all images; otherwise the view is only shown when a matching image is selected.',
 								'viewImageIdsProperty',
 							),
+							this.textSetting(
+								'View include layers property',
+								'Frontmatter key listing layer ranges to include for a view.',
+								'viewIncludeLayersProperty',
+							),
+							this.textSetting(
+								'View exclude layers property',
+								'Frontmatter key listing layer ranges to exclude for a view.',
+								'viewExcludeLayersProperty',
+							),
 						],
 					},
 					{
