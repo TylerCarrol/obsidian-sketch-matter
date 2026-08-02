@@ -2,7 +2,7 @@
 tags:
   - sketchmatter-type/river
 sketchmatter-layer: 220
-children:
+sketchmatter-children:
   - shape: polyline
     coordinates:
       - 2577.3, 1064.4

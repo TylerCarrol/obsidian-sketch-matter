@@ -2,7 +2,7 @@
 tags:
   - sketchmatter-type/lake
 sketchmatter-layer: 240
-children:
+sketchmatter-children:
   - shape: polygon
     coordinates:
       - 1338.9, 391.4

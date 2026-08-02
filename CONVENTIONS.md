@@ -134,6 +134,8 @@ The table below maps every `SketchMatterSettings` field to its default value. Wh
 | `viewExcludeLayersProperty` | `sketchmatter-exclude-layers` | Frontmatter key for view layer exclude ranges |
 | `imageDefinitionTagPrefix` | `sketchmatter-image` | Tag prefix for image definition notes |
 | `layerProperty` | `sketchmatter-layer` | Frontmatter key for layer number |
+| `objectShapeProperty` | `sketchmatter-shape` | Frontmatter key for object-level shape override |
+| `objectChildrenProperty` | `sketchmatter-children` | Frontmatter key for object-level child shape arrays |
 | `layerRenderOrder` | `0-1` | Whether lower or higher layers render first |
 | `coordinatesProperty` | `sketchmatter-coordinates` | Frontmatter key for coordinate data |
 | `labelCoordinatesProperty` | `sketchmatter-label-coordinates` | Frontmatter key for label-specific coordinate data |

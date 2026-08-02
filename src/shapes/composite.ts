@@ -81,7 +81,9 @@ export class CompositeShape extends SvgShape {
 		// Prefer per-object children, then fall back to type-definition defaults.
 		// This lets a type definition like 'city' declare a canonical composite
 		// structure so individual notes don't need to repeat it.
+		const configuredChildrenKey = context.settings.objectChildrenProperty;
 		const raw =
+			context.object.properties[configuredChildrenKey] ??
 			context.object.properties['children'] ??
 			context.typeDefinition?.properties?.['children'];
 		if (!Array.isArray(raw)) {
@@ -94,7 +96,10 @@ export class CompositeShape extends SvgShape {
 				continue;
 			}
 			const record = entry as Record<string, unknown>;
-			const shape = record['shape'];
+			const shape =
+				record[context.settings.objectShapeProperty] ??
+				record['shape'] ??
+				record['sketchmatter-shape'];
 			if (typeof shape !== 'string' || shape.length === 0) {
 				continue;
 			}
@@ -117,7 +122,7 @@ export class CompositeShape extends SvgShape {
 			...parentContext.object.properties,
 		};
 		for (const [key, value] of Object.entries(child)) {
-			if (key !== 'shape' && key !== 'style') {
+			if (key !== 'shape' && key !== parentContext.settings.objectShapeProperty && key !== 'style') {
 				childProperties[key] = value;
 			}
 		}

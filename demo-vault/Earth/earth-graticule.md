@@ -2,7 +2,7 @@
 tags:
   - sketchmatter-type/graticule
 sketchmatter-layer: 20
-children:
+sketchmatter-children:
   - shape: polyline
     coordinates:
       - 1130.6, 2154.2

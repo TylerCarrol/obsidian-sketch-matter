@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Added configurable settings keys for view layer filters: `viewIncludeLayersProperty` and `viewExcludeLayersProperty`.
+- Added configurable settings keys for object shape and child arrays: `objectShapeProperty` and `objectChildrenProperty`.
 
 ## [0.1.2] - 2026-08-02
 

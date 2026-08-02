@@ -2,7 +2,7 @@
 tags:
   - sketchmatter-type/boundary
 sketchmatter-layer: 430
-children:
+sketchmatter-children:
   - shape: polygon
     coordinates:
       - 2562.8, 1458.3

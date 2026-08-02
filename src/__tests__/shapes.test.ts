@@ -446,4 +446,39 @@ describe('CompositeShape', () => {
 		expect(elements).not.toBeNull();
 		expect(elements![0]!.childElementCount).toBe(1);
 	});
+
+	it('reads configurable object children and child shape keys from settings', () => {
+		const customSettings = {
+			...DEFAULT_SETTINGS,
+			objectChildrenProperty: 'custom-children',
+			objectShapeProperty: 'custom-shape',
+		};
+		const file = new TFile('notes/test.md');
+		const object: SketchMatterObject = {
+			objectId: 'test-custom-children',
+			sourcePath: 'notes/test.md',
+			file,
+			typeName: 'city',
+			layer: 100,
+			coordinates: ['25, 30'],
+			coordinatesProperty: DEFAULT_SETTINGS.coordinatesProperty,
+			imageIds: [],
+			properties: {
+				'custom-children': [{ 'custom-shape': 'circle', radius: 7 }],
+			},
+		};
+
+		const ctx: ShapeRenderContext = {
+			object,
+			typeDefinition: null,
+			coordinates: object.coordinates,
+			settings: customSettings,
+		};
+
+		const elements = shape.createElements(ctx);
+		expect(elements).not.toBeNull();
+		expect(elements![0]!.tagName.toLowerCase()).toBe('g');
+		expect(elements![0]!.childElementCount).toBe(1);
+		expect(elements![0]!.children[0]!.tagName.toLowerCase()).toBe('circle');
+	});
 });

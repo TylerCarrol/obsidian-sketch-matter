@@ -2,7 +2,7 @@
 tags:
   - sketchmatter-type/continent
 sketchmatter-layer: 110
-children:
+sketchmatter-children:
   - shape: polygon
     coordinates:
       - 4174.5, 1339

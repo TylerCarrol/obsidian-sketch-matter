@@ -3,8 +3,8 @@ tags:
   - sketchmatter-type/decoration
 sketchmatter-layer: 100
 sketchmatter-image-id: Logo
-shape: composite
-children:
+sketchmatter-shape: composite
+sketchmatter-children:
   - shape: polygon
     coordinates:
       - "31, 10"

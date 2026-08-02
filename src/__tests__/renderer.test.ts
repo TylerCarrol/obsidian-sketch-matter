@@ -169,3 +169,47 @@ describe('renderSvgToString — exported backgrounds', () => {
 		expect(svgContent).toContain('href="app://local/backgrounds/sample-background.svg"');
 	});
 });
+
+describe('renderSvgToString — configurable object shape and children keys', () => {
+	it('uses configured object shape key for shape overrides', () => {
+		const settings = {
+			...DEFAULT_SETTINGS,
+			objectShapeProperty: 'custom-shape',
+		};
+		const object = makeObject(
+			'custom-shape-object',
+			'continent',
+			['0, 0', '100, 0', '80, 60'],
+			{ 'custom-shape': 'line' },
+		);
+
+		const svgContent = renderSvgToString([object], undefined, '0-1', settings, null);
+		expect(svgContent).toContain('<line');
+		expect(svgContent).not.toContain('<polygon');
+	});
+
+	it('uses configured object children key for multipart child rendering', () => {
+		const settings = {
+			...DEFAULT_SETTINGS,
+			objectShapeProperty: 'custom-shape',
+			objectChildrenProperty: 'custom-children',
+		};
+		const object = makeObject(
+			'custom-children-object',
+			'continent',
+			null,
+			{
+				'custom-children': [
+					{
+						'custom-shape': 'circle',
+						coordinates: '50, 60',
+						radius: 10,
+					},
+				],
+			},
+		);
+
+		const svgContent = renderSvgToString([object], undefined, '0-1', settings, null);
+		expect(svgContent).toContain('<circle');
+	});
+});

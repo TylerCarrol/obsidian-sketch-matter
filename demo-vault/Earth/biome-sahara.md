@@ -2,7 +2,7 @@
 tags:
   - sketchmatter-type/biome
 sketchmatter-layer: 320
-children:
+sketchmatter-children:
   - shape: polygon
     coordinates:
       - 2401.9, 632.2

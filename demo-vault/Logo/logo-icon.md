@@ -3,8 +3,8 @@ tags:
   - sketchmatter-type/decoration
 sketchmatter-layer: 400
 sketchmatter-image-id: Logo
-shape: composite
-children:
+sketchmatter-shape: composite
+sketchmatter-children:
   - shape: polygon
     coordinates:
       - "52, 110"
@@ -85,5 +85,5 @@ children:
 # Logo icon
 
 A stylised "frontmatter tag" (pentagon with a hole and three property lines)
-crossed diagonally by a pen/stylus — the pen body is light blue, the eraser
+crossed diagonally by a pen/stylus â€” the pen body is light blue, the eraser
 cap is pink, the nib is gold, and the ink dot glows gold at the tip.

@@ -11,6 +11,8 @@ export interface SketchMatterSettings {
 	viewExcludeLayersProperty: string;
 	imageDefinitionTagPrefix: string;
 	layerProperty: string;
+	objectShapeProperty: string;
+	objectChildrenProperty: string;
 	layerRenderOrder: LayerRenderOrder;
 	coordinatesProperty: string;
 	labelCoordinatesProperty: string;
@@ -158,6 +160,8 @@ export const DEFAULT_SETTINGS: SketchMatterSettings = {
 	viewExcludeLayersProperty: 'sketchmatter-exclude-layers',
 	imageDefinitionTagPrefix: 'sketchmatter-image',
 	layerProperty: 'sketchmatter-layer',
+	objectShapeProperty: 'sketchmatter-shape',
+	objectChildrenProperty: 'sketchmatter-children',
 	layerRenderOrder: '0-1',
 	coordinatesProperty: 'sketchmatter-coordinates',
 	labelCoordinatesProperty: 'sketchmatter-label-coordinates',

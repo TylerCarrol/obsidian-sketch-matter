@@ -159,6 +159,16 @@ export class SketchMatterSettingTab extends PluginSettingTab {
 							this.textSetting('Font color', 'Frontmatter key for label font color.', 'fontColorProperty'),
 							this.textSetting('Image ID', 'Frontmatter key that assigns an object to one or more images.', 'imageIdProperty'),
 							this.textSetting('Layer', 'Frontmatter key for layer assignment.', 'layerProperty'),
+							this.textSetting(
+								'Object shape property',
+								'Frontmatter key that overrides the resolved shape for an object.',
+								'objectShapeProperty',
+							),
+							this.textSetting(
+								'Object children property',
+								'Frontmatter key for child shape arrays used by composite and multipart objects.',
+								'objectChildrenProperty',
+							),
 							{
 								name: 'Layer render order',
 								desc: 'Whether lower-numbered layers render first (0 -> 1) or last (1 -> 0).',

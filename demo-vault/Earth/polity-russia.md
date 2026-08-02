@@ -2,7 +2,7 @@
 tags:
   - sketchmatter-type/polity
 sketchmatter-layer: 420
-children:
+sketchmatter-children:
   - shape: polygon
     coordinates:
       - 3503.1, 284.3

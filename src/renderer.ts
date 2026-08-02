@@ -79,6 +79,56 @@ function inferShapeName(coordinates: unknown): string {
 	return DEFAULT_POLYGON_SHAPE;
 }
 
+function resolveConfiguredProperty(
+	properties: Record<string, unknown>,
+	configuredKey: string,
+	legacyKeys: string[],
+): unknown {
+	const configuredValue = properties[configuredKey];
+	if (configuredValue != null) {
+		return configuredValue;
+	}
+
+	for (const legacyKey of legacyKeys) {
+		if (legacyKey === configuredKey) {
+			continue;
+		}
+		const legacyValue = properties[legacyKey];
+		if (legacyValue != null) {
+			return legacyValue;
+		}
+	}
+
+	return undefined;
+}
+
+function resolveShapeOverride(properties: Record<string, unknown>, settings: SketchMatterSettings): string | null {
+	const rawShape = resolveConfiguredProperty(properties, settings.objectShapeProperty, ['shape', 'sketchmatter-shape']);
+	if (typeof rawShape !== 'string') {
+		return null;
+	}
+
+	const normalized = rawShape.trim();
+	return normalized.length > 0 ? normalized : null;
+}
+
+function resolveMultipartChildren(
+	properties: Record<string, unknown>,
+	settings: SketchMatterSettings,
+): MultipartChild[] {
+	const rawChildren = resolveConfiguredProperty(properties, settings.objectChildrenProperty, ['children']);
+	if (!Array.isArray(rawChildren)) {
+		return [];
+	}
+
+	return rawChildren.filter(
+		(entry): entry is MultipartChild =>
+			typeof entry === 'object' &&
+			entry !== null &&
+			'coordinates' in (entry as Record<string, unknown>),
+	);
+}
+
 /**
  * Resolve the shape name for an object, considering the type definition hierarchy.
  */
@@ -86,10 +136,11 @@ function resolveShapeName(
 	object: SketchMatterObject,
 	typeDefinition: SketchMatterTypeDefinition | null,
 	typeDefinitions: Map<string, SketchMatterTypeDefinition>,
+	settings: SketchMatterSettings,
 ): string {
 	// Check object-level shape override
-	const objectShape = object.properties['shape'] ?? object.properties['sketchmatter-shape'];
-	if (typeof objectShape === 'string' && objectShape.length > 0) {
+	const objectShape = resolveShapeOverride(object.properties, settings);
+	if (objectShape) {
 		return objectShape;
 	}
 
@@ -115,9 +166,10 @@ function resolveShapeName(
 function resolveRenderableObject(
 	object: SketchMatterObject,
 	typeDefinitions: Map<string, SketchMatterTypeDefinition>,
+	settings: SketchMatterSettings,
 ): ResolvedRenderableObject {
 	const typeDefinition = typeDefinitions.get(object.typeName) ?? null;
-	const shapeName = resolveShapeName(object, typeDefinition, typeDefinitions);
+	const shapeName = resolveShapeName(object, typeDefinition, typeDefinitions, settings);
 	return { object, typeDefinition, shapeName };
 }
 
@@ -629,9 +681,9 @@ function renderObject(
 	settings: SketchMatterSettings,
 	state: RenderSupportState,
 ): void {
-	const { typeDefinition, shapeName } = resolveRenderableObject(object, typeDefinitions);
+	const { typeDefinition, shapeName } = resolveRenderableObject(object, typeDefinitions, settings);
 	const beforeCount = svg.childElementCount;
-	const multipartChildren = collectMultipartChildren(object);
+	const multipartChildren = resolveMultipartChildren(object.properties, settings);
 
 	if (multipartChildren.length > 0 && shapeName !== 'composite') {
 		for (const child of multipartChildren) {
@@ -673,20 +725,6 @@ function renderObject(
 		}
 	}
 
-	function collectMultipartChildren(object: SketchMatterObject): MultipartChild[] {
-		const rawChildren = object.properties['children'];
-		if (!Array.isArray(rawChildren)) {
-			return [];
-		}
-
-		return rawChildren.filter(
-			(entry): entry is MultipartChild =>
-				typeof entry === 'object' &&
-				entry !== null &&
-				'coordinates' in (entry as Record<string, unknown>),
-		);
-	}
-
 	function renderMultipartChild(
 		svg: SVGElement,
 		object: SketchMatterObject,
@@ -695,9 +733,10 @@ function renderObject(
 		defaultShapeName: string,
 		child: MultipartChild,
 	): void {
+		const childShapeOverride = resolveShapeOverride(child, settings);
 		const shapeName =
-			typeof child.shape === 'string' && child.shape.trim().length > 0
-				? child.shape.trim()
+			childShapeOverride
+				? childShapeOverride
 				: defaultShapeName;
 		const shape = getShape(shapeName) ?? getShape(DEFAULT_FALLBACK_SHAPE);
 		if (!shape) {
@@ -804,7 +843,7 @@ function renderToSvg(
 	const defs = createSvgElement('defs');
 	svg.appendChild(defs);
 
-	const resolvedObjects = objects.map((object) => resolveRenderableObject(object, typeDefinitions));
+	const resolvedObjects = objects.map((object) => resolveRenderableObject(object, typeDefinitions, settings));
 	const state: RenderSupportState = {
 		defs,
 		resolvedObjects,

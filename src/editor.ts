@@ -69,10 +69,15 @@ function projectToSegment(
 function resolveIsOpenShape(
 	object: SketchMatterObject,
 	typeDefinitions: Map<string, SketchMatterTypeDefinition>,
+	settings: SketchMatterSettings,
 	points: [number, number][],
 ): boolean {
-	const shapeOverride = object.properties['shape'] ?? object.properties['sketchmatter-shape'];
-	if (typeof shapeOverride === 'string') {
+	const rawShapeOverride =
+		object.properties[settings.objectShapeProperty] ??
+		object.properties['shape'] ??
+		object.properties['sketchmatter-shape'];
+	if (typeof rawShapeOverride === 'string') {
+		const shapeOverride = rawShapeOverride.trim();
 		return shapeOverride === 'polyline' || shapeOverride === 'line';
 	}
 	const typeDef = typeDefinitions.get(object.typeName);
@@ -270,7 +275,7 @@ export function attachEditorOverlay(
 		if (!rawPoints || rawPoints.length < 1) continue;
 
 		const points: [number, number][] = rawPoints.map(([x, y]) => [x, y]);
-		const isOpen = resolveIsOpenShape(object, typeDefinitions, points);
+		const isOpen = resolveIsOpenShape(object, typeDefinitions, settings, points);
 		const isSinglePoint = points.length === 1;
 
 		let hitTarget: SVGElement;

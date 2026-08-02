@@ -2,7 +2,7 @@
 tags:
   - sketchmatter-type/coastline
 sketchmatter-layer: 125
-children:
+sketchmatter-children:
   - shape: polyline
     coordinates:
       - 4325, 1360
