@@ -36,6 +36,7 @@ function makeContext(
 	return {
 		object,
 		typeDefinition: null,
+		typeDefinitions: new Map(),
 		coordinates,
 		settings: DEFAULT_SETTINGS,
 	};
@@ -69,6 +70,7 @@ function makeContextWithTypeDef(
 	return {
 		object,
 		typeDefinition,
+		typeDefinitions: new Map([[typeDefinition.name, typeDefinition]]),
 		coordinates,
 		settings: DEFAULT_SETTINGS,
 	};
@@ -471,6 +473,7 @@ describe('CompositeShape', () => {
 		const ctx: ShapeRenderContext = {
 			object,
 			typeDefinition: null,
+			typeDefinitions: new Map(),
 			coordinates: object.coordinates,
 			settings: customSettings,
 		};
@@ -480,5 +483,39 @@ describe('CompositeShape', () => {
 		expect(elements![0]!.tagName.toLowerCase()).toBe('g');
 		expect(elements![0]!.childElementCount).toBe(1);
 		expect(elements![0]!.children[0]!.tagName.toLowerCase()).toBe('circle');
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Default tree type definition
+// ---------------------------------------------------------------------------
+
+describe('default tree type definition', () => {
+	it('renders as a composite of stacked triangles and a trunk', () => {
+		const treeType = DEFAULT_SETTINGS.typeDefinitions.find((d) => d.name === 'tree');
+		expect(treeType?.shape).toBe('composite');
+
+		const shape = new CompositeShape();
+		const ctx = makeContextWithTypeDef(['100, 200'], treeType!);
+		const elements = shape.createElements(ctx);
+
+		expect(elements).not.toBeNull();
+		const group = elements![0]!;
+		expect(group.tagName.toLowerCase()).toBe('g');
+		expect(group.querySelectorAll('polygon').length).toBe(3);
+		expect(group.querySelectorAll('rect').length).toBe(1);
+	});
+
+	it('offsets tree children when the parent coordinates use the legacy numeric pair format', () => {
+		const treeType = DEFAULT_SETTINGS.typeDefinitions.find((d) => d.name === 'tree');
+		const shape = new CompositeShape();
+		const ctx = makeContextWithTypeDef([100, 200], treeType!);
+		const elements = shape.createElements(ctx);
+
+		expect(elements).not.toBeNull();
+		const firstPolygon = elements![0]!.querySelector('polygon');
+		expect(firstPolygon).not.toBeNull();
+		expect(firstPolygon!.getAttribute('points')).toContain('89');
+		expect(firstPolygon!.getAttribute('points')).toContain('206');
 	});
 });

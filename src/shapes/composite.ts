@@ -5,8 +5,10 @@ import { getShape } from './registry';
  * Definition for a single child element within a composite shape.
  */
 export interface CompositeChild {
+	name?: string;
 	shape: string;
 	coordinates?: unknown;
+	relativeCoordinates?: boolean;
 	style?: Record<string, string | number>;
 	[key: string]: unknown;
 }
@@ -115,6 +117,9 @@ export class CompositeShape extends SvgShape {
 	): ShapeRenderContext {
 		// Child coordinates override the parent's, falling back to parent coordinates
 		const childCoordinates = child['coordinates'] ?? child['sketchmatter-coordinates'] ?? parentContext.coordinates;
+		const resolvedChildCoordinates = child.relativeCoordinates
+			? this.offsetCoordinates(childCoordinates, parentContext.coordinates)
+			: childCoordinates;
 
 		// Merge child properties onto parent properties so the child shape
 		// can resolve its own style and dimension properties
@@ -133,9 +138,78 @@ export class CompositeShape extends SvgShape {
 				properties: childProperties,
 			},
 			typeDefinition: parentContext.typeDefinition,
-			coordinates: childCoordinates,
+			typeDefinitions: parentContext.typeDefinitions,
+			coordinates: resolvedChildCoordinates,
 			settings: parentContext.settings,
 		};
+	}
+
+	private offsetCoordinates(childCoordinates: unknown, parentCoordinates: unknown): unknown {
+		const parentPoints = this.toPointArray(parentCoordinates);
+		if (!parentPoints || parentPoints.length === 0) {
+			return childCoordinates;
+		}
+
+		const [offsetX, offsetY] = parentPoints[0]!;
+		const childPoints = this.toPointArray(childCoordinates);
+		if (!childPoints || childPoints.length === 0) {
+			return childCoordinates;
+		}
+
+		return childPoints.map(([x, y]) => `${x + offsetX}, ${y + offsetY}`);
+	}
+
+	private toPointArray(value: unknown): [number, number][] | null {
+		if (
+			Array.isArray(value) &&
+			value.length === 2 &&
+			typeof value[0] === 'number' &&
+			typeof value[1] === 'number'
+		) {
+			return [value as [number, number]];
+		}
+
+		if (Array.isArray(value) && value.length > 0) {
+			const pairs: [number, number][] = [];
+			for (const entry of value) {
+				if (typeof entry === 'string') {
+					const parts = entry.split(',');
+					if (parts.length !== 2) {
+						return null;
+					}
+					const x = Number(parts[0]?.trim());
+					const y = Number(parts[1]?.trim());
+					if (!Number.isFinite(x) || !Number.isFinite(y)) {
+						return null;
+					}
+					pairs.push([x, y]);
+					continue;
+				}
+				if (Array.isArray(entry) && entry.length === 2) {
+					const x = Number(entry[0]);
+					const y = Number(entry[1]);
+					if (!Number.isFinite(x) || !Number.isFinite(y)) {
+						return null;
+					}
+					pairs.push([x, y]);
+					continue;
+				}
+				return null;
+			}
+			return pairs;
+		}
+
+		if (typeof value === 'string') {
+			const parts = value.split(',');
+			if (parts.length !== 2) {
+				return null;
+			}
+			const x = Number(parts[0]?.trim());
+			const y = Number(parts[1]?.trim());
+			return Number.isFinite(x) && Number.isFinite(y) ? [[x, y]] : null;
+		}
+
+		return null;
 	}
 
 	private resolveChildStyle(

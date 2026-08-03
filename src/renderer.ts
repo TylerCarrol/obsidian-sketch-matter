@@ -44,6 +44,7 @@ interface ResolvedRenderableObject {
 
 interface RenderSupportState {
 	defs: SVGDefsElement;
+	typeDefinitions: Map<string, SketchMatterTypeDefinition>;
 	resolvedObjects: ResolvedRenderableObject[];
 	maskIdByKey: Map<string, string>;
 	textureIdBySource: Map<string, string>;
@@ -326,6 +327,7 @@ function ensureMaskId(
 		const context: ShapeRenderContext = {
 			object: source.object,
 			typeDefinition: source.typeDefinition,
+			typeDefinitions: state.typeDefinitions,
 			coordinates: source.object.coordinates,
 			settings,
 		};
@@ -391,6 +393,7 @@ function ensureOverlapMaskId(
 		const context: ShapeRenderContext = {
 			object: source.object,
 			typeDefinition: source.typeDefinition,
+			typeDefinitions: state.typeDefinitions,
 			coordinates: source.object.coordinates,
 			settings,
 		};
@@ -699,6 +702,7 @@ function renderObject(
 				const context: ShapeRenderContext = {
 					object,
 					typeDefinition,
+					typeDefinitions: state.typeDefinitions,
 					coordinates: object.coordinates,
 					settings,
 				};
@@ -708,6 +712,7 @@ function renderObject(
 			const context: ShapeRenderContext = {
 				object,
 				typeDefinition,
+				typeDefinitions: state.typeDefinitions,
 				coordinates: object.coordinates,
 				settings,
 			};
@@ -766,6 +771,7 @@ function renderObject(
 				properties: childProperties,
 			},
 			typeDefinition,
+			typeDefinitions: state.typeDefinitions,
 			coordinates: child.coordinates,
 			settings,
 		};
@@ -846,6 +852,7 @@ function renderToSvg(
 	const resolvedObjects = objects.map((object) => resolveRenderableObject(object, typeDefinitions, settings));
 	const state: RenderSupportState = {
 		defs,
+		typeDefinitions,
 		resolvedObjects,
 		maskIdByKey: new Map<string, string>(),
 		textureIdBySource: new Map<string, string>(),

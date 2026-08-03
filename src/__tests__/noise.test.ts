@@ -28,6 +28,7 @@ function makeContext(
 	return {
 		object,
 		typeDefinition: null,
+		typeDefinitions: new Map(),
 		coordinates: null,
 		settings: DEFAULT_SETTINGS,
 	};

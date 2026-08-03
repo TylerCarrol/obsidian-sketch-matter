@@ -18,6 +18,7 @@ export interface ShapeStyle {
 export interface ShapeRenderContext {
 	object: SketchMatterObject;
 	typeDefinition: SketchMatterTypeDefinition | null;
+	typeDefinitions?: Map<string, SketchMatterTypeDefinition>;
 	coordinates: unknown;
 	settings: SketchMatterSettings;
 }

@@ -43,6 +43,10 @@ export interface SketchMatterSettings {
 	overlapPatternSpacingProperty: string;
 	overlapPatternAngleProperty: string;
 	overlapPatternColorProperty: string;
+	scatterCountProperty: string;
+	scatterItemWidthProperty: string;
+	scatterItemHeightProperty: string;
+	scatterItemTypeProperty: string;
 	defaultLayer: number;
 	autoRefresh: boolean;
 	showDebugInfo: boolean;
@@ -125,6 +129,94 @@ export const DEFAULT_SETTINGS: SketchMatterSettings = {
 			},
 		},
 		{
+			name: 'tree',
+			shape: 'composite',
+			layerOverrideProperty: 'sketchmatter-tree-layer',
+			defaultLayer: 395,
+			style: {
+				opacity: 1,
+			},
+			properties: {
+				children: [
+					{
+						name: 'Outer canopy',
+						shape: 'polygon',
+						relativeCoordinates: true,
+						coordinates: ['-11, 6', '0, -14', '11, 6'],
+						fill: '#2f6b2f',
+						stroke: '#234f23',
+						strokeWidth: 1,
+					},
+					{
+						name: 'Middle canopy',
+						shape: 'polygon',
+						relativeCoordinates: true,
+						coordinates: ['-9, 0', '0, -20', '9, 0'],
+						fill: '#3b7c3b',
+						stroke: '#234f23',
+						strokeWidth: 1,
+					},
+					{
+						name: 'Upper canopy',
+						shape: 'polygon',
+						relativeCoordinates: true,
+						coordinates: ['-7, -6', '0, -26', '7, -6'],
+						fill: '#4d8e4d',
+						stroke: '#234f23',
+						strokeWidth: 1,
+					},
+					{
+						name: 'Trunk',
+						shape: 'rect',
+						relativeCoordinates: true,
+						coordinates: ['-2, 6'],
+						width: 4,
+						height: 10,
+						fill: '#6b4f2a',
+						stroke: 'none',
+						strokeWidth: 0,
+					},
+				],
+			},
+		},
+		{
+			name: 'mountains',
+			shape: 'scatter',
+			layerOverrideProperty: 'sketchmatter-mountains-layer',
+			defaultLayer: 400,
+			style: {
+				fill: '#7a6a55',
+				stroke: '#4a3a2a',
+				strokeWidth: 1,
+			},
+			properties: {
+				scatterCount: 25,
+				scatterItemWidth: 28,
+				scatterItemHeight: 18,
+				noiseMagnitude: 4,
+				noise: 1.2,
+			},
+		},
+		{
+			name: 'trees',
+			shape: 'scatter',
+			layerOverrideProperty: 'sketchmatter-trees-layer',
+			defaultLayer: 405,
+			style: {
+				fill: '#4f8d4f',
+				stroke: '#345f34',
+				strokeWidth: 1,
+			},
+			properties: {
+				scatterCount: 20,
+				scatterItemWidth: 26,
+				scatterItemHeight: 34,
+				scatterItemType: 'tree',
+				noiseMagnitude: 5,
+				noise: 1.15,
+			},
+		},
+		{
 			name: 'city',
 			shape: 'composite',
 			layerOverrideProperty: 'sketchmatter-city-layer',
@@ -136,6 +228,7 @@ export const DEFAULT_SETTINGS: SketchMatterSettings = {
 			properties: {
 				children: [
 					{
+						name: 'Outer ring',
 						shape: 'circle',
 						radius: 12,
 						fill: 'none',
@@ -143,6 +236,7 @@ export const DEFAULT_SETTINGS: SketchMatterSettings = {
 						strokeWidth: 1.5,
 					},
 					{
+						name: 'Core',
 						shape: 'circle',
 						radius: 4,
 						fill: '#2c2c2c',
@@ -192,6 +286,10 @@ export const DEFAULT_SETTINGS: SketchMatterSettings = {
 	overlapPatternSpacingProperty: 'sketchmatter-overlap-spacing',
 	overlapPatternAngleProperty: 'sketchmatter-overlap-angle',
 	overlapPatternColorProperty: 'sketchmatter-overlap-color',
+	scatterCountProperty: 'sketchmatter-scatter-count',
+	scatterItemWidthProperty: 'sketchmatter-scatter-item-width',
+	scatterItemHeightProperty: 'sketchmatter-scatter-item-height',
+	scatterItemTypeProperty: 'sketchmatter-scatter-item-type',
 	defaultLayer: 1000,
 	autoRefresh: true,
 	showDebugInfo: false,

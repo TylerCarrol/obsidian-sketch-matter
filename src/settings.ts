@@ -45,6 +45,71 @@ export function getTypeDefinitionDescription(typeTagPrefix: string, typeName: st
 	return `Tag suffix to identify notes of this type. Use ${normalizedPrefix}/${normalizedTypeName} to tag notes of this type.`;
 }
 
+export function formatCompositeChildCoordinates(value: unknown): string {
+	if (typeof value === 'string') {
+		return value.trim();
+	}
+
+	if (
+		Array.isArray(value) &&
+		value.length === 2 &&
+		typeof value[0] === 'number' &&
+		typeof value[1] === 'number'
+	) {
+		return `${value[0]}, ${value[1]}`;
+	}
+
+	if (Array.isArray(value)) {
+		return value
+			.map((entry) => {
+				if (typeof entry === 'string') {
+					return entry.trim();
+				}
+				if (Array.isArray(entry) && entry.length === 2) {
+					const x = Number(entry[0]);
+					const y = Number(entry[1]);
+					if (Number.isFinite(x) && Number.isFinite(y)) {
+						return `${x}, ${y}`;
+					}
+				}
+				return '';
+			})
+			.filter(Boolean)
+			.join('\n');
+	}
+
+	return '';
+}
+
+export function parseCompositeChildCoordinates(value: string): string[] | string | undefined {
+	const lines = value
+		.split(/\r?\n/g)
+		.map((line) => line.trim())
+		.filter(Boolean);
+
+	if (lines.length === 0) {
+		return undefined;
+	}
+
+	return lines.length === 1 ? lines[0] : lines;
+}
+
+export function formatCompositeChildLabel(child: CompositeChild, index: number): string {
+	const name = typeof child.name === 'string' ? child.name.trim() : '';
+	const shape = typeof child.shape === 'string' ? child.shape.trim() : '';
+
+	if (name.length > 0 && shape.length > 0) {
+		return `${index + 1}. ${name} (${shape})`;
+	}
+	if (name.length > 0) {
+		return `${index + 1}. ${name}`;
+	}
+	if (shape.length > 0) {
+		return `${index + 1}. ${shape}`;
+	}
+	return `Child ${index + 1}`;
+}
+
 export class SketchMatterSettingTab extends PluginSettingTab {
 	plugin: Plugin;
 	settings: SketchMatterSettings;
@@ -291,6 +356,33 @@ export class SketchMatterSettingTab extends PluginSettingTab {
 							this.textSetting('Seed', 'Frontmatter key for the deterministic noise seed string.', 'noiseSeedProperty'),
 							this.textSetting('Magnitude', 'Frontmatter key for point-offset magnitude (amplitude).', 'noiseMagnitudeProperty'),
 							this.textSetting('Amount', 'Frontmatter key for roughness/detail amount.', 'noiseAmountProperty'),
+						],
+					},
+					{
+						type: 'page',
+						name: 'Scatter',
+						desc: 'Frontmatter keys for the scatter shape, which fills a polygon with randomly placed items.',
+						items: [
+							this.textSetting(
+								'Scatter item type',
+								'Frontmatter key for the type or shape rendered at each scattered position. Use a registered type name to inherit composite children and type-level defaults.',
+								'scatterItemTypeProperty',
+							),
+							this.textSetting(
+								'Scatter count',
+								'Frontmatter key for the number of items to scatter inside the polygon.',
+								'scatterCountProperty',
+							),
+							this.textSetting(
+								'Scatter item width',
+								'Frontmatter key for the width of each scatter item in SVG units.',
+								'scatterItemWidthProperty',
+							),
+							this.textSetting(
+								'Scatter item height',
+								'Frontmatter key for the height of each scatter item in SVG units.',
+								'scatterItemHeightProperty',
+							),
 						],
 					},
 				],
@@ -618,7 +710,15 @@ export class SketchMatterSettingTab extends PluginSettingTab {
 		if (!children || !children[childIndex]) return;
 
 		const child = children[childIndex];
-		const childContainer = container.createDiv('sketchmatter-composite-child');
+		const childContainer = container.createEl('details', { cls: 'sketchmatter-composite-child' });
+		childContainer.open = true;
+		childContainer.style.margin = '0.75em 0 1em';
+		const summary = childContainer.createEl('summary', { cls: 'sketchmatter-composite-child-summary' });
+		summary.textContent = formatCompositeChildLabel(child, childIndex);
+
+		const updateSummary = (): void => {
+			summary.textContent = formatCompositeChildLabel(child, childIndex);
+		};
 
 		new Setting(childContainer)
 			.setName(`Child ${childIndex + 1}`)
@@ -639,19 +739,67 @@ export class SketchMatterSettingTab extends PluginSettingTab {
 					}),
 			);
 
-		new Setting(childContainer).setName('Shape').addDropdown((dropdown) => {
-			for (const name of getRegisteredShapeNames()) {
-				dropdown.addOption(name, name);
-			}
-			dropdown.setValue(child.shape);
-			dropdown.onChange(async (value) => {
-				const td = this.settings.typeDefinitions[typeIndex];
-				const ch = (td?.properties?.['children'] as CompositeChild[] | undefined)?.[childIndex];
-				if (!ch) return;
-				ch.shape = value;
-				await this.plugin.saveData(this.settings);
-			});
-		});
+		new Setting(childContainer)
+			.setName('Name')
+			.setDesc('Optional label used in the settings summary.')
+			.addText((text) =>
+				text
+					.setPlaceholder('e.g. Canopy')
+					.setValue(typeof child.name === 'string' ? child.name : '')
+					.onChange(async (value) => {
+						const td = this.settings.typeDefinitions[typeIndex];
+						const ch = (td?.properties?.['children'] as CompositeChild[] | undefined)?.[childIndex];
+						if (!ch) return;
+						const trimmed = value.trim();
+						if (trimmed.length > 0) {
+							ch.name = trimmed;
+						} else {
+							delete ch.name;
+						}
+						updateSummary();
+						await this.plugin.saveData(this.settings);
+					}),
+			);
+
+		new Setting(childContainer)
+			.setName('Shape')
+			.setDesc('Built-in shape name or type definition name.')
+			.addText((text) =>
+				text
+					.setPlaceholder('circle, rect, tree, city, ...')
+					.setValue(child.shape)
+					.onChange(async (value) => {
+						const td = this.settings.typeDefinitions[typeIndex];
+						const ch = (td?.properties?.['children'] as CompositeChild[] | undefined)?.[childIndex];
+						if (!ch) return;
+						ch.shape = value.trim();
+						updateSummary();
+						await this.plugin.saveData(this.settings);
+					}),
+			);
+
+		new Setting(childContainer)
+			.setName('Coordinates')
+			.setDesc('Child-local coordinate or path data. Leave empty to inherit the parent coordinates.')
+			.addTextArea((textArea) =>
+				textArea
+					.setPlaceholder('100, 200\n150, 250')
+					.setValue(formatCompositeChildCoordinates(child['coordinates'] ?? child['sketchmatter-coordinates']))
+					.onChange(async (value) => {
+						const td = this.settings.typeDefinitions[typeIndex];
+						const ch = (td?.properties?.['children'] as CompositeChild[] | undefined)?.[childIndex];
+						if (!ch) return;
+						const parsed = parseCompositeChildCoordinates(value);
+						if (parsed === undefined) {
+							delete ch.coordinates;
+							delete ch['sketchmatter-coordinates'];
+						} else {
+							ch.coordinates = parsed;
+							delete ch['sketchmatter-coordinates'];
+						}
+						await this.plugin.saveData(this.settings);
+					}),
+			);
 
 		new Setting(childContainer)
 			.setName('Fill')
@@ -714,6 +862,52 @@ export class SketchMatterSettingTab extends PluginSettingTab {
 						await this.plugin.saveData(this.settings);
 					});
 			});
+
+			new Setting(childContainer)
+				.setName('Width')
+				.setDesc('For rect shapes.')
+				.addText((text) => {
+					const widthVal = child['width'];
+					const widthStr = typeof widthVal === 'number' || typeof widthVal === 'string' ? String(widthVal) : '';
+					return text
+						.setPlaceholder('50')
+						.setValue(widthStr)
+						.onChange(async (value) => {
+							const td = this.settings.typeDefinitions[typeIndex];
+							const ch = (td?.properties?.['children'] as CompositeChild[] | undefined)?.[childIndex];
+							if (!ch) return;
+							const parsed = Number(value.trim());
+							if (value.trim().length > 0 && !Number.isNaN(parsed)) {
+								ch['width'] = parsed;
+							} else {
+								delete ch['width'];
+							}
+							await this.plugin.saveData(this.settings);
+						});
+				});
+
+			new Setting(childContainer)
+				.setName('Height')
+				.setDesc('For rect shapes.')
+				.addText((text) => {
+					const heightVal = child['height'];
+					const heightStr = typeof heightVal === 'number' || typeof heightVal === 'string' ? String(heightVal) : '';
+					return text
+						.setPlaceholder('30')
+						.setValue(heightStr)
+						.onChange(async (value) => {
+							const td = this.settings.typeDefinitions[typeIndex];
+							const ch = (td?.properties?.['children'] as CompositeChild[] | undefined)?.[childIndex];
+							if (!ch) return;
+							const parsed = Number(value.trim());
+							if (value.trim().length > 0 && !Number.isNaN(parsed)) {
+								ch['height'] = parsed;
+							} else {
+								delete ch['height'];
+							}
+							await this.plugin.saveData(this.settings);
+						});
+				});
 
 		new Setting(childContainer)
 			.setName('Opacity')

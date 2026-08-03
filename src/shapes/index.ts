@@ -8,6 +8,7 @@ export { CircleShape } from './circle';
 export { RectShape } from './rect';
 export { EllipseShape } from './ellipse';
 export { CompositeShape } from './composite';
+export { ScatterShape } from './scatter';
 export type { CompositeChild } from './composite';
 export {
 	registerShape,
@@ -29,6 +30,7 @@ import { CircleShape } from './circle';
 import { RectShape } from './rect';
 import { EllipseShape } from './ellipse';
 import { CompositeShape } from './composite';
+import { ScatterShape } from './scatter';
 
 registerShape(new PolygonShape());
 registerShape(new LineShape());
@@ -38,3 +40,4 @@ registerShape(new CircleShape());
 registerShape(new RectShape());
 registerShape(new EllipseShape());
 registerShape(new CompositeShape());
+registerShape(new ScatterShape());

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added scatter type which can render a configurable item type at random positions.
+- Added default `mountains` and `trees` composite type definition, used by the scatter type.
+- Composite child coordinates can now be edited directly in plugin settings.
+
 ## [0.2.1] - 2026-08-03
 
 ### Added

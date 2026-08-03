@@ -3,10 +3,10 @@ tags:
   - sketchmatter-type/biome
 sketchmatter-layer: 360
 sketchmatter-coordinates:
-  - -15, -10
-  - 316, -21
-  - 315, 289
-  - -33, 309
+  - 58, 52
+  - 325, 49
+  - 294, 257
+  - 58, 287
 sketchmatter-image-id: Fantasy Map
 sketchmatter-fill: "#4f8b4c"
 sketchmatter-stroke: "#2f5a2f"

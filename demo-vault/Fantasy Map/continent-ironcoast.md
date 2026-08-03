@@ -23,7 +23,7 @@ sketchmatter-font-style:
   - italic
 sketchmatter-font-color: "#4b2d12"
 sketchmatter-label-coordinates:
-  - 158, 412
+  - 157, 400
 ---
 
 # Ironcoast
