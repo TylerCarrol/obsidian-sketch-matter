@@ -37,6 +37,11 @@ type PreviewButtonOptions = {
 	ariaLabel?: string;
 };
 
+type PreviewViewportState = {
+	scrollLeft: number;
+	scrollTop: number;
+};
+
 export class SketchMatterView extends ItemView {
 plugin: SketchMatterPluginLike;
 selector: HTMLSelectElement | null = null;
@@ -107,6 +112,7 @@ const previousViewId = this.selector?.value || this.currentViewId;
 this.currentViewId = previousViewId;
 const previousImageId = this.imageSelector?.value || this.currentImageId;
 this.currentImageId = previousImageId;
+	const previousViewport = this.capturePreviewViewportState();
 this.containerEl.empty();
 this.editorOverlayHandle = null;
 this.editorSidebarEl = null;
@@ -311,6 +317,7 @@ if (this.previewContainer) {
 		this.showGrid,
 	);
 	this.applyPreviewZoom();
+	this.restorePreviewViewportState(previousViewport);
 }
 
 // ── Attach editor overlay when in edit mode ─────────────────────
@@ -702,4 +709,24 @@ private resolveImageId(
 		const tooltipText = `Reset zoom (current ${zoomPercent})`;
 		this.zoomResetButton.setAttribute('aria-label', tooltipText);
 	}
+
+		private capturePreviewViewportState(): PreviewViewportState | null {
+			if (!this.previewContainer) {
+				return null;
+			}
+
+			return {
+				scrollLeft: this.previewContainer.scrollLeft,
+				scrollTop: this.previewContainer.scrollTop,
+			};
+		}
+
+		private restorePreviewViewportState(state: PreviewViewportState | null): void {
+			if (!state || !this.previewContainer) {
+				return;
+			}
+
+			this.previewContainer.scrollLeft = state.scrollLeft;
+			this.previewContainer.scrollTop = state.scrollTop;
+		}
 }

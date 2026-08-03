@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Preserved preview viewport position (scroll/zoom framing) across auto-refresh rerenders in edit mode, preventing the canvas from snapping back to the top-left after coordinate or style edits.
+
 ## [0.2.0] - 2026-08-02
 
 ### Added

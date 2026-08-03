@@ -20,13 +20,24 @@ function createSvgEl<K extends keyof SVGElementTagNameMap>(tag: K): SVGElementTa
 
 /** Convert a mouse/pointer event's screen coordinates to SVG user-space coordinates. */
 function svgPoint(svg: SVGSVGElement, e: MouseEvent): [number, number] {
-	const pt = svg.createSVGPoint();
-	pt.x = e.clientX;
-	pt.y = e.clientY;
-	const ctm = svg.getScreenCTM();
-	if (!ctm) return [0, 0];
-	const result = pt.matrixTransform(ctm.inverse());
-	return [result.x, result.y];
+	const rect = svg.getBoundingClientRect();
+	if (rect.width <= 0 || rect.height <= 0) {
+		return [0, 0];
+	}
+
+	const viewBox = svg.viewBox.baseVal;
+	const vbX = Number.isFinite(viewBox?.x) ? viewBox.x : 0;
+	const vbY = Number.isFinite(viewBox?.y) ? viewBox.y : 0;
+	const vbW = Number.isFinite(viewBox?.width) && viewBox.width > 0
+		? viewBox.width
+		: rect.width;
+	const vbH = Number.isFinite(viewBox?.height) && viewBox.height > 0
+		? viewBox.height
+		: rect.height;
+
+	const rx = (e.clientX - rect.left) / rect.width;
+	const ry = (e.clientY - rect.top) / rect.height;
+	return [vbX + rx * vbW, vbY + ry * vbH];
 }
 
 /** Minimum distance from point (px, py) to segment (ax, ay)→(bx, by). */
