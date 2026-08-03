@@ -9,13 +9,86 @@ const HANDLE_CLASS = 'sketchmatter-handle';
 const HIT_TARGET_CLASS = 'sketchmatter-hit-target';
 const HANDLES_GROUP_CLASS = 'sketchmatter-handles-group';
 const INSERT_MARKER_CLASS = 'sketchmatter-insert-marker';
-const EDGE_INSERT_THRESHOLD = 10;
-const DRAG_START_THRESHOLD = 2;
+const EDGE_INSERT_THRESHOLD_PX = 10;
+const DRAG_START_THRESHOLD_PX = 2;
 const SINGLE_POINT_HIT_PADDING = 8;
 const SINGLE_POINT_HIT_RADIUS = 12;
 
 function createSvgEl<K extends keyof SVGElementTagNameMap>(tag: K): SVGElementTagNameMap[K] {
 	return document.createElementNS(SVG_NS, tag);
+}
+
+type SvgViewportMetrics = {
+	vbX: number;
+	vbY: number;
+	scaleX: number;
+	scaleY: number;
+	offsetX: number;
+	offsetY: number;
+};
+
+/**
+ * Compute SVG viewport mapping metrics that honor preserveAspectRatio.
+ */
+function getSvgViewportMetrics(svg: SVGSVGElement): SvgViewportMetrics {
+	const rect = svg.getBoundingClientRect();
+	const viewBox = svg.viewBox.baseVal;
+	const vbX = Number.isFinite(viewBox?.x) ? viewBox.x : 0;
+	const vbY = Number.isFinite(viewBox?.y) ? viewBox.y : 0;
+	const vbW = Number.isFinite(viewBox?.width) && viewBox.width > 0 ? viewBox.width : 1;
+	const vbH = Number.isFinite(viewBox?.height) && viewBox.height > 0 ? viewBox.height : 1;
+	const viewportW = rect.width > 0 ? rect.width : vbW;
+	const viewportH = rect.height > 0 ? rect.height : vbH;
+
+	const preserveAspectRatio = (svg.getAttribute('preserveAspectRatio') ?? 'xMidYMid meet').trim();
+	if (preserveAspectRatio === 'none') {
+		return {
+			vbX,
+			vbY,
+			scaleX: viewportW / vbW,
+			scaleY: viewportH / vbH,
+			offsetX: 0,
+			offsetY: 0,
+		};
+	}
+
+	const parts = preserveAspectRatio.split(/\s+/).filter((part) => part.length > 0);
+	const align = parts[0] ?? 'xMidYMid';
+	const meetOrSlice = parts[1] ?? 'meet';
+	const uniformScale = meetOrSlice === 'slice'
+		? Math.max(viewportW / vbW, viewportH / vbH)
+		: Math.min(viewportW / vbW, viewportH / vbH);
+	const renderedW = vbW * uniformScale;
+	const renderedH = vbH * uniformScale;
+
+	let offsetX = 0;
+	if (align.includes('xMid')) {
+		offsetX = (viewportW - renderedW) / 2;
+	} else if (align.includes('xMax')) {
+		offsetX = viewportW - renderedW;
+	}
+
+	let offsetY = 0;
+	if (align.includes('YMid')) {
+		offsetY = (viewportH - renderedH) / 2;
+	} else if (align.includes('YMax')) {
+		offsetY = viewportH - renderedH;
+	}
+
+	return {
+		vbX,
+		vbY,
+		scaleX: uniformScale,
+		scaleY: uniformScale,
+		offsetX,
+		offsetY,
+	};
+}
+
+function pixelsToSvgDistance(svg: SVGSVGElement, distancePx: number): number {
+	const metrics = getSvgViewportMetrics(svg);
+	const pxPerUnit = Math.max(1e-6, Math.min(metrics.scaleX, metrics.scaleY));
+	return distancePx / pxPerUnit;
 }
 
 /** Convert a mouse/pointer event's screen coordinates to SVG user-space coordinates. */
@@ -25,19 +98,13 @@ function svgPoint(svg: SVGSVGElement, e: MouseEvent): [number, number] {
 		return [0, 0];
 	}
 
-	const viewBox = svg.viewBox.baseVal;
-	const vbX = Number.isFinite(viewBox?.x) ? viewBox.x : 0;
-	const vbY = Number.isFinite(viewBox?.y) ? viewBox.y : 0;
-	const vbW = Number.isFinite(viewBox?.width) && viewBox.width > 0
-		? viewBox.width
-		: rect.width;
-	const vbH = Number.isFinite(viewBox?.height) && viewBox.height > 0
-		? viewBox.height
-		: rect.height;
-
-	const rx = (e.clientX - rect.left) / rect.width;
-	const ry = (e.clientY - rect.top) / rect.height;
-	return [vbX + rx * vbW, vbY + ry * vbH];
+	const metrics = getSvgViewportMetrics(svg);
+	const localX = e.clientX - rect.left - metrics.offsetX;
+	const localY = e.clientY - rect.top - metrics.offsetY;
+	return [
+		metrics.vbX + localX / Math.max(1e-6, metrics.scaleX),
+		metrics.vbY + localY / Math.max(1e-6, metrics.scaleY),
+	];
 }
 
 /** Minimum distance from point (px, py) to segment (ax, ay)→(bx, by). */
@@ -348,7 +415,8 @@ export function attachEditorOverlay(
 
 	function tryGetInsertionPoint(entry: EditEntry, x: number, y: number): SegmentHit | null {
 		const hit = findNearestSegmentHit(entry, x, y);
-		if (!hit || hit.distance > EDGE_INSERT_THRESHOLD) return null;
+		const threshold = pixelsToSvgDistance(svg, EDGE_INSERT_THRESHOLD_PX);
+		if (!hit || hit.distance > threshold) return null;
 		return hit;
 	}
 
@@ -381,17 +449,32 @@ export function attachEditorOverlay(
 			handle.setAttribute('r', '6');
 
 			let isDragging = false;
+			let didMove = false;
+			let dragStartMouse: [number, number] | null = null;
+			let dragStartPoint: [number, number] | null = null;
 
 			const onPointerDown = (e: PointerEvent): void => {
 				e.stopPropagation();
 				e.preventDefault();
 				isDragging = true;
+				didMove = false;
+				dragStartMouse = svgPoint(svg, e);
+				dragStartPoint = [...entry.points[i]!];
 				handle.setPointerCapture(e.pointerId);
 			};
 
 			const onPointerMove = (e: PointerEvent): void => {
-				if (!isDragging) return;
-				const [nx, ny] = svgPoint(svg, e);
+				if (!isDragging || !dragStartMouse || !dragStartPoint) return;
+				const [mx, my] = svgPoint(svg, e);
+				const dx = mx - dragStartMouse[0];
+				const dy = my - dragStartMouse[1];
+				const threshold = pixelsToSvgDistance(svg, DRAG_START_THRESHOLD_PX);
+				if (!didMove && Math.hypot(dx, dy) < threshold) {
+					return;
+				}
+				didMove = true;
+				const nx = dragStartPoint[0] + dx;
+				const ny = dragStartPoint[1] + dy;
 				const previousPoint = entry.points[i] ?? undefined;
 				entry.points[i] = [nx, ny];
 				handle.setAttribute('cx', String(nx));
@@ -403,7 +486,11 @@ export function attachEditorOverlay(
 				if (!isDragging) return;
 				isDragging = false;
 				handle.releasePointerCapture(e.pointerId);
-				onCoordinatesChanged(entry.object, [...entry.points]);
+				dragStartMouse = null;
+				dragStartPoint = null;
+				if (didMove) {
+					onCoordinatesChanged(entry.object, [...entry.points]);
+				}
 			};
 
 			const onContextMenu = (e: MouseEvent): void => {
@@ -483,7 +570,8 @@ export function attachEditorOverlay(
 			const [mx, my] = svgPoint(svg, e);
 			const dx = mx - dragStartMouse[0];
 			const dy = my - dragStartMouse[1];
-			if (!didDragSelection && Math.hypot(dx, dy) < DRAG_START_THRESHOLD) {
+			const threshold = pixelsToSvgDistance(svg, DRAG_START_THRESHOLD_PX);
+			if (!didDragSelection && Math.hypot(dx, dy) < threshold) {
 				return;
 			}
 			didDragSelection = true;

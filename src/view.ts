@@ -38,8 +38,8 @@ type PreviewButtonOptions = {
 };
 
 type PreviewViewportState = {
-	scrollLeft: number;
-	scrollTop: number;
+	contentCenterXRatio: number;
+	contentCenterYRatio: number;
 };
 
 export class SketchMatterView extends ItemView {
@@ -714,10 +714,14 @@ private resolveImageId(
 			if (!this.previewContainer) {
 				return null;
 			}
+			const contentWidth = this.previewContainer.scrollWidth;
+			const contentHeight = this.previewContainer.scrollHeight;
+			const centerX = this.previewContainer.scrollLeft + this.previewContainer.clientWidth / 2;
+			const centerY = this.previewContainer.scrollTop + this.previewContainer.clientHeight / 2;
 
 			return {
-				scrollLeft: this.previewContainer.scrollLeft,
-				scrollTop: this.previewContainer.scrollTop,
+				contentCenterXRatio: contentWidth > 0 ? centerX / contentWidth : 0.5,
+				contentCenterYRatio: contentHeight > 0 ? centerY / contentHeight : 0.5,
 			};
 		}
 
@@ -725,8 +729,14 @@ private resolveImageId(
 			if (!state || !this.previewContainer) {
 				return;
 			}
+			const targetCenterX = state.contentCenterXRatio * this.previewContainer.scrollWidth;
+			const targetCenterY = state.contentCenterYRatio * this.previewContainer.scrollHeight;
+			const targetScrollLeft = targetCenterX - this.previewContainer.clientWidth / 2;
+			const targetScrollTop = targetCenterY - this.previewContainer.clientHeight / 2;
+			const maxScrollLeft = Math.max(0, this.previewContainer.scrollWidth - this.previewContainer.clientWidth);
+			const maxScrollTop = Math.max(0, this.previewContainer.scrollHeight - this.previewContainer.clientHeight);
 
-			this.previewContainer.scrollLeft = state.scrollLeft;
-			this.previewContainer.scrollTop = state.scrollTop;
+			this.previewContainer.scrollLeft = Math.min(maxScrollLeft, Math.max(0, targetScrollLeft));
+			this.previewContainer.scrollTop = Math.min(maxScrollTop, Math.max(0, targetScrollTop));
 		}
 }

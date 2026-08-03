@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Preserved preview viewport position (scroll/zoom framing) across auto-refresh rerenders in edit mode, preventing the canvas from snapping back to the top-left after coordinate or style edits.
+- Fixed edit-overlay pointer mapping so dragging points and edge insertion behave correctly with `preserveAspectRatio` and zoom/letterboxing.
+- Fixed vertex-handle drag snapping by preserving pointer-to-vertex offset during drag, preventing points from jumping on click/drag start.
 
 ## [0.2.0] - 2026-08-02
 
