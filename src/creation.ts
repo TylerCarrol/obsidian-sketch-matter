@@ -345,6 +345,38 @@ async function revealCreatedFile(app: App, file: TFile): Promise<void> {
 	await leaf.openFile(file);
 }
 
+const STYLE_KEY_TO_SETTINGS: ReadonlyArray<{ key: string; prop: (s: SketchMatterSettings) => string }> = [
+	{ key: 'fill', prop: (s) => s.fillProperty },
+	{ key: 'stroke', prop: (s) => s.strokeProperty },
+	{ key: 'strokeWidth', prop: (s) => s.strokeWidthProperty },
+	{ key: 'opacity', prop: (s) => s.transparencyProperty },
+];
+
+function resolveTypeShape(typeName: string, settings: SketchMatterSettings): string {
+	const def = settings.typeDefinitions.find((d) => d.name === typeName);
+	return def?.shape ?? typeName;
+}
+
+function defaultCoordinatesForShape(shape: string): string[] {
+	switch (shape) {
+		case 'polygon':
+			return ['500, 400', '600, 400', '550, 480'];
+		case 'polyline':
+		case 'line':
+			return ['400, 500', '600, 500'];
+		default:
+			return ['500, 500'];
+	}
+}
+
+function emptyStylePropertyLines(typeName: string, settings: SketchMatterSettings): string[] {
+	const def = settings.typeDefinitions.find((d) => d.name === typeName);
+	const style = def?.style ?? {};
+	return STYLE_KEY_TO_SETTINGS
+		.filter(({ key }) => key in style)
+		.map(({ prop }) => `${prop(settings)}:`);
+}
+
 function collectObjectTypeNames(settings: SketchMatterSettings): string[] {
 	const configuredNames = settings.typeDefinitions
 		.map((definition) => definition.name.trim())
@@ -462,14 +494,19 @@ export async function createObjectDefinitionFlow(
 	const filePath = getUniqueMarkdownPath(app, folderPath, values.name);
 	const objectTag = `${settings.typeTagPrefix}/${values.typeName}`;
 
+	const shape = resolveTypeShape(values.typeName, settings);
+	const defaultCoords = defaultCoordinatesForShape(shape);
+	const styleLines = emptyStylePropertyLines(values.typeName, settings);
+
 	const contentLines = [
 		'---',
 		'tags:',
 		`  - ${objectTag}`,
 		`${settings.layerProperty}: ${settings.defaultLayer}`,
 		...yamlListLines(settings.imageIdProperty, values.imageIds),
-		`${settings.coordinatesProperty}: []`,
-		`${settings.labelCoordinatesProperty}: []`,
+		...yamlListLines(settings.coordinatesProperty, defaultCoords),
+		...yamlListLines(settings.labelCoordinatesProperty, defaultCoords.slice(0, 1)),
+		...styleLines,
 	];
 
 	if (values.typeName === 'label') {
