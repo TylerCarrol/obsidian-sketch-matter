@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-08-03
+
 ### Added
 
 - New objects created via **Create object** now include pre-defined coordinates.
@@ -65,7 +67,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Demo vault, including a Logo demo and sample maps.
 - Automated test coverage for metadata parsing, rendering, shapes, and noise helpers.
 
-[Unreleased]: https://github.com/TylerCarrol/obsidian-sketch-matter/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/TylerCarrol/obsidian-sketch-matter/compare/v0.2.1...HEAD
+
+[0.2.1]: https://github.com/TylerCarrol/obsidian-sketch-matter/compare/v0.2.0...v0.2.1
 
 [0.2.0]: https://github.com/TylerCarrol/obsidian-sketch-matter/compare/v0.1.2...v0.2.0
 
