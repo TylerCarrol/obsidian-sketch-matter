@@ -2,18 +2,18 @@
 
 [![GitHub Release](https://img.shields.io/github/v/release/TylerCarrol/obsidian-sketch-matter?logo=github&sort=semver)](https://github.com/TylerCarrol/obsidian-sketch-matter/releases/latest) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/TylerCarrol/obsidian-sketch-matter/blob/main/LICENSE) [![Lint](https://github.com/TylerCarrol/obsidian-sketch-matter/actions/workflows/lint.yml/badge.svg)](https://github.com/TylerCarrol/obsidian-sketch-matter/actions/workflows/lint.yml) [![Test](https://github.com/TylerCarrol/obsidian-sketch-matter/actions/workflows/test.yml/badge.svg)](https://github.com/TylerCarrol/obsidian-sketch-matter/actions/workflows/test.yml)
 
-![sketch-matter logo](./demo-vault/sketch-matter-export-all-logo.svg)
-> This logo was created using this plugin and is available in the `/demo-vault`
+![sketch-matter logo](./sketchmatter-demo-vault/sketch-matter-export-all-logo.svg)
+> This logo was created using this plugin and is available in the `/sketchmatter-demo-vault`
 
 **SketchMatter** renders SVG images from the frontmatter in Obsidian notes.
 
 ## Examples
 
-> The following examples are available in the `/demo-vault`
+> The following examples are available in the `/sketchmatter-demo-vault`
 
-![](./demo-vault/sketch-matter-export-political-fantasy_map.svg)
-![](./demo-vault/sketch-matter-export-geography-earth.svg)
-![](./demo-vault/sketch-matter-export-political-earth.svg)
+![](./sketchmatter-demo-vault/sketch-matter-export-political-fantasy_map.svg)
+![](./sketchmatter-demo-vault/sketch-matter-export-geography-earth.svg)
+![](./sketchmatter-demo-vault/sketch-matter-export-political-earth.svg)
 
 ## Features
 
@@ -276,7 +276,7 @@ npm run dev
 
 ## Fastest way to try it
 
-This repository includes a ready-made demo vault in `/demo-vault`.
+This repository includes a ready-made demo vault in `/sketchmatter-demo-vault`.
 
 - Windows/PowerShell:
   ```powershell
@@ -284,10 +284,10 @@ This repository includes a ready-made demo vault in `/demo-vault`.
   ```
 - Any platform:
   1. Run `npm run build`
-  2. Copy `main.js`, `manifest.json`, and `styles.css` to `demo-vault/.obsidian/plugins/sketch-matter/`
-  3. Open `demo-vault` in Obsidian
+  2. Copy `main.js`, `manifest.json`, and `styles.css` to `sketchmatter-demo-vault/.obsidian/plugins/sketch-matter/`
+  3. Open `sketchmatter-demo-vault` in Obsidian
 
-See `demo-vault/README.md` for a guided walkthrough.
+See `sketchmatter-demo-vault/README.md` for a guided walkthrough.
 
 ## How the plugin is organized
 

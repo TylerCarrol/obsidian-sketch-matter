@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 
 $repoRoot = Split-Path -Path $PSScriptRoot -Parent
-$pluginDir = Join-Path -Path $repoRoot -ChildPath 'demo-vault\.obsidian\plugins\sketch-matter'
+$pluginDir = Join-Path -Path $repoRoot -ChildPath 'sketchmatter-demo-vault\.obsidian\plugins\sketch-matter'
 if (-not (Test-Path -Path $pluginDir)) {
     New-Item -Path $pluginDir -ItemType Directory | Out-Null
 }
