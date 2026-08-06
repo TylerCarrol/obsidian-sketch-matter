@@ -14,6 +14,7 @@ import {
 	SketchMatterMetadataBundle,
 } from './metadata';
 import { renderSvgPreview, renderSvgToString } from './renderer';
+import { computePinchZoomState } from './preview-gesture';
 import {
 	attachEditorOverlay,
 	detachEditorOverlay,
@@ -67,6 +68,14 @@ private previewPanState:
 		startScrollLeft: number;
 		startScrollTop: number;
 		didPan: boolean;
+	}
+	| null = null;
+private previewPinchState:
+	| {
+		startDistance: number;
+		startZoom: number;
+		startScrollLeft: number;
+		startScrollTop: number;
 	}
 	| null = null;
 private suppressNextPreviewClick = false;
@@ -283,6 +292,7 @@ this.previewContainer = contentArea.createDiv({ cls: 'sketchmatter-preview-conta
 			{ passive: false },
 		);
 	this.registerPreviewPanHandlers(this.previewContainer);
+	this.registerPreviewTouchHandlers(this.previewContainer);
 
 if (this.editMode) {
 	this.editorSidebarEl = contentArea.createDiv({ cls: 'sketchmatter-editor-sidebar' });
@@ -543,35 +553,14 @@ private resolveImageId(
 	}
 
 	private setZoomLevel(nextZoom: number): void {
-		const clamped = this.clampZoom(nextZoom);
-		if (clamped === this.zoomLevel) {
-			this.updateZoomControls();
+		const container = this.previewContainer;
+		if (!container) {
 			return;
 		}
-
-		const container = this.previewContainer;
-		let anchorX = 0;
-		let anchorY = 0;
-		let localX = 0;
-		let localY = 0;
-		if (container) {
-			const rect = container.getBoundingClientRect();
-			localX = rect.width / 2;
-			localY = rect.height / 2;
-			anchorX = container.scrollLeft + localX;
-			anchorY = container.scrollTop + localY;
-		}
-
-		const previousZoom = this.zoomLevel;
-		this.zoomLevel = clamped;
-		this.applyPreviewZoom();
-
-		if (container && previousZoom > 0) {
-			const zoomRatio = this.zoomLevel / previousZoom;
-			container.scrollLeft = anchorX * zoomRatio - localX;
-			container.scrollTop = anchorY * zoomRatio - localY;
-		}
-		this.updateZoomControls();
+		const rect = container.getBoundingClientRect();
+		const localX = rect.width / 2;
+		const localY = rect.height / 2;
+		this.adjustZoomLevel(nextZoom, localX, localY);
 	}
 
 	private onPreviewWheel(event: WheelEvent): void {
@@ -584,24 +573,90 @@ private resolveImageId(
 		const rect = container.getBoundingClientRect();
 		const localX = event.clientX - rect.left;
 		const localY = event.clientY - rect.top;
-		const anchorX = container.scrollLeft + localX;
-		const anchorY = container.scrollTop + localY;
+		this.adjustZoomLevel(this.zoomLevel + PREVIEW_ZOOM_STEP * (event.deltaY < 0 ? 1 : -1), localX, localY);
+	}
 
-		const zoomDirection = event.deltaY < 0 ? 1 : -1;
-		const nextZoom = this.clampZoom(this.zoomLevel + PREVIEW_ZOOM_STEP * zoomDirection);
-		if (nextZoom === this.zoomLevel) {
+	private adjustZoomLevel(nextZoom: number, localX: number, localY: number): void {
+		const container = this.previewContainer;
+		const previousZoom = this.zoomLevel;
+		const clamped = this.clampZoom(nextZoom);
+		if (clamped === this.zoomLevel) {
 			this.updateZoomControls();
 			return;
 		}
 
-		const previousZoom = this.zoomLevel;
-		this.zoomLevel = nextZoom;
+		this.zoomLevel = clamped;
 		this.applyPreviewZoom();
 
-		const zoomRatio = this.zoomLevel / previousZoom;
-		container.scrollLeft = anchorX * zoomRatio - localX;
-		container.scrollTop = anchorY * zoomRatio - localY;
+		if (container && previousZoom > 0) {
+			const zoomRatio = this.zoomLevel / previousZoom;
+			const anchorX = container.scrollLeft + localX;
+			const anchorY = container.scrollTop + localY;
+			container.scrollLeft = anchorX * zoomRatio - localX;
+			container.scrollTop = anchorY * zoomRatio - localY;
+		}
 		this.updateZoomControls();
+	}
+
+	private registerPreviewTouchHandlers(container: HTMLElement): void {
+		const handleTouchStart = (event: TouchEvent): void => {
+			if (event.touches.length !== 2) {
+				return;
+			}
+			const [firstTouch, secondTouch] = Array.from(event.touches);
+			if (!firstTouch || !secondTouch) {
+				return;
+			}
+			this.previewPinchState = {
+				startDistance: Math.hypot(firstTouch.clientX - secondTouch.clientX, firstTouch.clientY - secondTouch.clientY),
+				startZoom: this.zoomLevel,
+				startScrollLeft: container.scrollLeft,
+				startScrollTop: container.scrollTop,
+			};
+			event.preventDefault();
+		};
+
+		const handleTouchMove = (event: TouchEvent): void => {
+			if (!this.previewPinchState || event.touches.length !== 2) {
+				return;
+			}
+			const [firstTouch, secondTouch] = Array.from(event.touches);
+			if (!firstTouch || !secondTouch) {
+				return;
+			}
+			const rect = container.getBoundingClientRect();
+			const currentDistance = Math.hypot(firstTouch.clientX - secondTouch.clientX, firstTouch.clientY - secondTouch.clientY);
+			const centerX = (firstTouch.clientX + secondTouch.clientX) / 2 - rect.left;
+			const centerY = (firstTouch.clientY + secondTouch.clientY) / 2 - rect.top;
+			const pinchState = computePinchZoomState({
+				startZoom: this.previewPinchState.startZoom,
+				startDistance: this.previewPinchState.startDistance,
+				currentDistance,
+				startScrollLeft: this.previewPinchState.startScrollLeft,
+				startScrollTop: this.previewPinchState.startScrollTop,
+				localX: centerX,
+				localY: centerY,
+				minZoom: MIN_PREVIEW_ZOOM,
+				maxZoom: MAX_PREVIEW_ZOOM,
+			});
+			this.zoomLevel = pinchState.zoomLevel;
+			this.applyPreviewZoom();
+			container.scrollLeft = pinchState.scrollLeft;
+			container.scrollTop = pinchState.scrollTop;
+			this.updateZoomControls();
+			event.preventDefault();
+		};
+
+		const handleTouchEnd = (event: TouchEvent): void => {
+			if (event.touches.length < 2) {
+				this.previewPinchState = null;
+			}
+		};
+
+		container.addEventListener('touchstart', handleTouchStart, { passive: false });
+		container.addEventListener('touchmove', handleTouchMove, { passive: false });
+		container.addEventListener('touchend', handleTouchEnd, { passive: false });
+		container.addEventListener('touchcancel', handleTouchEnd, { passive: false });
 	}
 
 	private applyPreviewZoom(): void {

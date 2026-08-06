@@ -218,6 +218,7 @@
 	min-height: 400px;
 	overflow: auto;
 	cursor: grab;
+	touch-action: none;
 }
 
 .sketchmatter-preview-container.sketchmatter-preview-pan-ready {
