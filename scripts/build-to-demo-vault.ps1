@@ -1,7 +1,9 @@
 $ErrorActionPreference = 'Stop'
 
 $repoRoot = Split-Path -Path $PSScriptRoot -Parent
-$pluginDir = Join-Path -Path $repoRoot -ChildPath 'sketchmatter-demo-vault\.obsidian\plugins\sketch-matter'
+$manifest = Get-Content -Path (Join-Path -Path $repoRoot -ChildPath 'manifest.json') -Raw | ConvertFrom-Json
+$pluginId = $manifest.id
+$pluginDir = Join-Path -Path $repoRoot -ChildPath "$pluginId-demo-vault\.obsidian\plugins\$pluginId"
 if (-not (Test-Path -Path $pluginDir)) {
     New-Item -Path $pluginDir -ItemType Directory | Out-Null
 }
