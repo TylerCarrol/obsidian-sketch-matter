@@ -70,6 +70,10 @@
 	border-top: 1px solid var(--background-modifier-border);
 }
 
+.sketchmatter-composite-child {
+	margin: 0.75em 0 1em;
+}
+
 /* ── Preview pane controls ─────────────────────────────────────── */
 
 .sketchmatter-view-controls {

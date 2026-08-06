@@ -712,7 +712,6 @@ export class SketchMatterSettingTab extends PluginSettingTab {
 		const child = children[childIndex];
 		const childContainer = container.createEl('details', { cls: 'sketchmatter-composite-child' });
 		childContainer.open = true;
-		childContainer.style.margin = '0.75em 0 1em';
 		const summary = childContainer.createEl('summary', { cls: 'sketchmatter-composite-child-summary' });
 		summary.textContent = formatCompositeChildLabel(child, childIndex);
 
@@ -744,7 +743,7 @@ export class SketchMatterSettingTab extends PluginSettingTab {
 			.setDesc('Optional label used in the settings summary.')
 			.addText((text) =>
 				text
-					.setPlaceholder('e.g. Canopy')
+					.setPlaceholder('E.g. Canopy')
 					.setValue(typeof child.name === 'string' ? child.name : '')
 					.onChange(async (value) => {
 						const td = this.settings.typeDefinitions[typeIndex];
@@ -766,7 +765,7 @@ export class SketchMatterSettingTab extends PluginSettingTab {
 			.setDesc('Built-in shape name or type definition name.')
 			.addText((text) =>
 				text
-					.setPlaceholder('circle, rect, tree, city, ...')
+					.setPlaceholder('Circle, rect, tree, city, ...')
 					.setValue(child.shape)
 					.onChange(async (value) => {
 						const td = this.settings.typeDefinitions[typeIndex];
