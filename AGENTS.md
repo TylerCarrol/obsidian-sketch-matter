@@ -45,6 +45,10 @@ npm run build
 - Use the format and examples in [`COMMIT_MESSAGES.md`](./COMMIT_MESSAGES.md).
 - Reference: https://www.conventionalcommits.org/en/v1.0.0/
 
+## Changelog
+
+- If any file under `src/` changes, update `CHANGELOG.md` in the same change set.
+
 ## File & folder conventions
 
 - **Organize code into multiple files**: Split functionality across separate modules rather than putting everything in `main.ts`.
