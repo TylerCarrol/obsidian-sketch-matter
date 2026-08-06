@@ -22,8 +22,8 @@ data.json
 .DS_Store
 
 # Exclude Demo Vault Files
-sketchmatter-demo-vault/.obsidian/plugins/sketch-matter/main.js
-sketchmatter-demo-vault/.obsidian/plugins/sketch-matter/manifest.json
-sketchmatter-demo-vault/.obsidian/plugins/sketch-matter/styles.css
-sketchmatter-demo-vault/.obsidian/workspace.json
-sketchmatter-demo-vault/*.svg
+sketch-matter-demo-vault/.obsidian/plugins/sketch-matter/main.js
+sketch-matter-demo-vault/.obsidian/plugins/sketch-matter/manifest.json
+sketch-matter-demo-vault/.obsidian/plugins/sketch-matter/styles.css
+sketch-matter-demo-vault/.obsidian/workspace.json
+sketch-matter-demo-vault/*.svg

@@ -12,7 +12,7 @@ export default defineConfig(
 		'main.js',
 		'package.json',
 		'package-lock.json',
-		'sketchmatter-demo-vault/**',
+		'sketch-matter-demo-vault/**',
 		'tsconfig.json',
 		'vitest.config.ts',
 	]),
