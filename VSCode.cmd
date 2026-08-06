@@ -5,11 +5,19 @@ REM Resolve this script's directory as the repo root.
 set "REPO_DIR=%~dp0"
 if "%REPO_DIR:~-1%"=="\" set "REPO_DIR=%REPO_DIR:~0,-1%"
 
-REM Prefer the VS Code CLI if it is available on PATH.
-where code >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
-    start "" code -r "%REPO_DIR%"
-    exit /b 0
+REM Prefer a resolved Code.exe from PATH entries (including code.cmd wrappers).
+set "CODE_EXE="
+for /f "usebackq delims=" %%I in (`where code 2^>nul`) do (
+    if /I "%%~xI"==".exe" (
+        set "CODE_EXE=%%~fI"
+        goto :launch
+    )
+    if /I "%%~xI"==".cmd" (
+        if exist "%%~dpI..\Code.exe" (
+            set "CODE_EXE=%%~dpI..\Code.exe"
+            goto :launch
+        )
+    )
 )
 
 REM Fallback to common Windows install locations.
@@ -19,9 +27,15 @@ for %%I in (
     "%ProgramFiles(x86)%\Microsoft VS Code\Code.exe"
 ) do (
     if exist %%~I (
-        start "" "%%~I" -r "%REPO_DIR%"
-        exit /b 0
+        set "CODE_EXE=%%~I"
+        goto :launch
     )
+)
+
+:launch
+if defined CODE_EXE (
+    start "" "%CODE_EXE%" -n "%REPO_DIR%"
+    exit /b 0
 )
 
 echo Could not find VS Code. Install it or add the ^"code^" command to PATH.
