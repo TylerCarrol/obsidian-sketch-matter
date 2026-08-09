@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-08-09
+
 ### Changed
 
 - Made preview zoom bounds configurable in plugin settings, with an option to remove the upper limit.
@@ -85,7 +87,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Demo vault, including a Logo demo and sample maps.
 - Automated test coverage for metadata parsing, rendering, shapes, and noise helpers.
 
-[Unreleased]: https://github.com/TylerCarrol/obsidian-sketch-matter/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/TylerCarrol/obsidian-sketch-matter/compare/v0.4.0...HEAD
+
+[0.4.0]: https://github.com/TylerCarrol/obsidian-sketch-matter/compare/v0.3.1...v0.4.0
 
 [0.3.1]: https://github.com/TylerCarrol/obsidian-sketch-matter/compare/v0.3.0...v0.3.1
 
