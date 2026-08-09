@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { renderSvgPreview, renderSvgToString } from '../renderer';
+import { collectSketchMatterTypeDefinitions } from '../metadata';
 import { DEFAULT_SETTINGS, SketchMatterObject } from '../types';
 import { TFile } from '../__mocks__/obsidian';
 // Register all built-in shapes so polygon/polyline etc. are available.
@@ -186,6 +187,30 @@ describe('renderSvgToString — configurable object shape and children keys', ()
 		const svgContent = renderSvgToString([object], undefined, '0-1', settings, null);
 		expect(svgContent).toContain('<line');
 		expect(svgContent).not.toContain('<polygon');
+	});
+
+	it('keeps the configured label shape when a shared note overrides its geometry shape', () => {
+		const properties = {
+			[DEFAULT_SETTINGS.objectShapeProperty]: 'rect',
+			[DEFAULT_SETTINGS.labelTextProperty]: 'Northland',
+			[DEFAULT_SETTINGS.rectWidthProperty]: 1085,
+			[DEFAULT_SETTINGS.rectHeightProperty]: 633,
+		};
+		const rectangle = makeObject('rectangle-geometry', 'continent', ['8, 9'], properties);
+		const label = makeObject('rectangle-label', 'label', ['16, 4'], properties);
+		const typeDefinitions = collectSketchMatterTypeDefinitions(DEFAULT_SETTINGS);
+
+		const svgContent = renderSvgToString(
+			[rectangle, label],
+			typeDefinitions,
+			'0-1',
+			DEFAULT_SETTINGS,
+			null,
+		);
+
+		expect(svgContent).toContain('<rect');
+		expect(svgContent).toContain('<text');
+		expect(svgContent).toContain('Northland</text>');
 	});
 
 	it('uses configured object children key for multipart child rendering', () => {

@@ -1,6 +1,7 @@
 ---
 tags:
   - sketchmatter-type/polity
+  - sketchmatter-type/label
 sketchmatter-layer: "415"
 sketchmatter-coordinates:
   - 434, 332

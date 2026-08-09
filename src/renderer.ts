@@ -139,9 +139,10 @@ function resolveShapeName(
 	typeDefinitions: Map<string, SketchMatterTypeDefinition>,
 	settings: SketchMatterSettings,
 ): string {
-	// Check object-level shape override
+	// A shared note can define both geometry and a label. The geometry override
+	// must not replace the label type's configured text shape.
 	const objectShape = resolveShapeOverride(object.properties, settings);
-	if (objectShape) {
+	if (objectShape && !typeDefinition?.useLabelCoordinates) {
 		return objectShape;
 	}
 
