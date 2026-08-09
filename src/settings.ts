@@ -232,6 +232,7 @@ export class SketchMatterSettingTab extends PluginSettingTab {
 								'labelCoordinatesProperty',
 							),
 							this.textSetting('Label text', 'Frontmatter key for label text content.', 'labelTextProperty'),
+							this.textSetting('Label angle', 'Frontmatter key for label rotation angle in degrees.', 'labelAngleProperty'),
 							this.textSetting('Font family', 'Frontmatter key for label typeface or font family.', 'fontFamilyProperty'),
 							this.textSetting('Font size', 'Frontmatter key for label font size.', 'fontSizeProperty'),
 							this.textSetting(

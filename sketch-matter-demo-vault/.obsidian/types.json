@@ -18,6 +18,7 @@
     "sketchmatter-height": "number",
     "sketchmatter-background-color": "text",
     "sketchmatter-background-image": "text",
-    "sketchmatter-preserve-aspect-ratio": "text"
+    "sketchmatter-preserve-aspect-ratio": "text",
+    "sketchmatter-angle": "number"
   }
 }

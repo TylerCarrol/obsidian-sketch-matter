@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Added configurable `sketchmatter-angle` support so shapes can be rotated from frontmatter.
+- Added configurable `sketchmatter-label-angle` support so labels can override angle independently on shared notes.
 - Rectangles now read configurable `sketchmatter-*` width, height, and corner radius properties by default.
 
 ## [0.4.0] - 2026-08-09

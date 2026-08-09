@@ -22,6 +22,7 @@ export interface SketchMatterSettings {
 	coordinatesProperty: string;
 	labelCoordinatesProperty: string;
 	labelTextProperty: string;
+	labelAngleProperty: string;
 	fontFamilyProperty: string;
 	fontSizeProperty: string;
 	fontStyleProperty: string;
@@ -267,6 +268,7 @@ export const DEFAULT_SETTINGS: SketchMatterSettings = {
 	coordinatesProperty: 'sketchmatter-coordinates',
 	labelCoordinatesProperty: 'sketchmatter-label-coordinates',
 	labelTextProperty: 'sketchmatter-label-text',
+	labelAngleProperty: 'sketchmatter-label-angle',
 	fontFamilyProperty: 'sketchmatter-font-family',
 	fontSizeProperty: 'sketchmatter-font-size',
 	fontStyleProperty: 'sketchmatter-font-style',

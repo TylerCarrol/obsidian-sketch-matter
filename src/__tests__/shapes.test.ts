@@ -428,6 +428,23 @@ describe('TextShape', () => {
 		);
 		expect(svg.children[0]!.getAttribute('fill')).toBe('#e8c060');
 	});
+
+	it('uses the label-specific angle property when provided', () => {
+		const elements = renderShape(shape, ['100, 200'], {
+			[DEFAULT_SETTINGS.labelTextProperty]: 'Tilted label',
+			[DEFAULT_SETTINGS.labelAngleProperty]: 35,
+		});
+		expect(elements![0]!.getAttribute('transform')).toBe('rotate(35 100 200)');
+	});
+
+	it('label angle overrides the generic angle property for text', () => {
+		const elements = renderShape(shape, ['100, 200'], {
+			[DEFAULT_SETTINGS.labelTextProperty]: 'Priority test',
+			[DEFAULT_SETTINGS.angleProperty]: 10,
+			[DEFAULT_SETTINGS.labelAngleProperty]: 70,
+		});
+		expect(elements![0]!.getAttribute('transform')).toBe('rotate(70 100 200)');
+	});
 });
 
 // ---------------------------------------------------------------------------

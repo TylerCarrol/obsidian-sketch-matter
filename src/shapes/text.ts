@@ -137,4 +137,21 @@ export class TextShape extends SvgShape {
 
 		return context.object.file.basename;
 	}
+
+	protected resolveRotationAngle(context: ShapeRenderContext): number | null {
+		const props = context.object.properties;
+		const raw = readProperty(
+			props,
+			context.settings.labelAngleProperty,
+			context.settings.angleProperty,
+			'angle',
+			'rotation',
+		);
+		if (raw == null) {
+			return null;
+		}
+
+		const parsed = Number(raw);
+		return Number.isFinite(parsed) ? parsed : null;
+	}
 }
