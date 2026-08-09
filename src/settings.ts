@@ -167,6 +167,24 @@ export class SketchMatterSettingTab extends PluginSettingTab {
 							defaultValue: DEFAULT_SETTINGS.defaultLayer,
 						},
 					},
+						{
+							name: 'Minimum preview zoom',
+							desc: 'Smallest zoom level for the preview panel. Set to 0 to keep only a small safety floor.',
+							control: {
+								type: 'number',
+								key: 'previewMinZoom',
+								defaultValue: DEFAULT_SETTINGS.previewMinZoom,
+							},
+						},
+						{
+							name: 'Maximum preview zoom',
+							desc: 'Largest zoom level for the preview panel. Set to 0 for no upper limit.',
+							control: {
+								type: 'number',
+								key: 'previewMaxZoom',
+								defaultValue: DEFAULT_SETTINGS.previewMaxZoom,
+							},
+						},
 				],
 			},
 			{

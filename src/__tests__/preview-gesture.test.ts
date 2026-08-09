@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computePinchZoomState } from '../preview-gesture';
+import { clampPreviewZoom, computePinchZoomState, stepPreviewZoom } from '../preview-gesture';
 
 describe('computePinchZoomState', () => {
 	it('scales zoom around the pinch center while preserving the viewed content', () => {
@@ -36,5 +36,15 @@ describe('computePinchZoomState', () => {
 		expect(state.zoomLevel).toBe(4);
 		expect(state.scrollLeft).toBe(30);
 		expect(state.scrollTop).toBe(60);
+	});
+
+	it('allows the upper bound to be disabled', () => {
+		expect(clampPreviewZoom(12.345, 0.25, 0)).toBe(12.35);
+		expect(clampPreviewZoom(0.001, 0, 0)).toBe(0.01);
+	});
+
+	it('steps zoom multiplicatively for button and wheel zooming', () => {
+		expect(stepPreviewZoom(1, 'in')).toBe(1.1);
+		expect(stepPreviewZoom(1, 'out')).toBe(0.91);
 	});
 });

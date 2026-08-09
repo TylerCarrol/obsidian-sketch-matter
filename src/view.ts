@@ -14,7 +14,7 @@ import {
 	SketchMatterMetadataBundle,
 } from './metadata';
 import { renderSvgPreview, renderSvgToString } from './renderer';
-import { computePinchZoomState } from './preview-gesture';
+import { clampPreviewZoom, computePinchZoomState, stepPreviewZoom } from './preview-gesture';
 import {
 	attachEditorOverlay,
 	detachEditorOverlay,
@@ -24,11 +24,9 @@ import {
 import { renderObjectList, renderObjectDetail } from './ui/editor-panel';
 
 export const VIEW_TYPE_SKETCH_MATTER = 'sketch-matter-view';
-const MIN_PREVIEW_ZOOM = 0.25;
-const MAX_PREVIEW_ZOOM = 4;
-const PREVIEW_ZOOM_STEP = 0.1;
 const PREVIEW_PAN_START_THRESHOLD = 2;
 const PREVIEW_PAN_BLOCK_SELECTOR = '.sketchmatter-hit-target, .sketchmatter-handle';
+const PREVIEW_ZOOM_FLOOR = 0.01;
 
 type SketchMatterPluginLike = Plugin & { settings: SketchMatterSettings };
 type PreviewButtonOptions = {
@@ -204,7 +202,7 @@ const zoomOutButton = this.createPreviewButton(zoomControls, {
 	className: 'sketchmatter-zoom-button',
 });
 zoomOutButton.addEventListener('click', () => {
-this.setZoomLevel(this.zoomLevel - PREVIEW_ZOOM_STEP);
+	this.setZoomLevel(stepPreviewZoom(this.zoomLevel, 'out'));
 });
 
 this.zoomResetButton = this.createPreviewButton(zoomControls, {
@@ -223,7 +221,7 @@ const zoomInButton = this.createPreviewButton(zoomControls, {
 	className: 'sketchmatter-zoom-button',
 });
 zoomInButton.addEventListener('click', () => {
-this.setZoomLevel(this.zoomLevel + PREVIEW_ZOOM_STEP);
+	this.setZoomLevel(stepPreviewZoom(this.zoomLevel, 'in'));
 });
 this.updateZoomControls();
 
@@ -546,10 +544,19 @@ private resolveImageId(
 }
 
 	private clampZoom(value: number): number {
-		if (!Number.isFinite(value)) {
-			return 1;
-		}
-		return Math.min(MAX_PREVIEW_ZOOM, Math.max(MIN_PREVIEW_ZOOM, Number(value.toFixed(2))));
+		const { minZoom, maxZoom } = this.getPreviewZoomBounds();
+		return clampPreviewZoom(value, minZoom, maxZoom);
+	}
+
+	private getPreviewZoomBounds(): { minZoom: number; maxZoom: number } {
+		const configuredMinZoom = this.plugin.settings.previewMinZoom;
+		const configuredMaxZoom = this.plugin.settings.previewMaxZoom;
+		const minZoom = configuredMinZoom > 0 ? configuredMinZoom : PREVIEW_ZOOM_FLOOR;
+		const maxZoom = configuredMaxZoom > 0 ? configuredMaxZoom : Number.POSITIVE_INFINITY;
+
+		return minZoom <= maxZoom
+			? { minZoom, maxZoom }
+			: { minZoom: maxZoom, maxZoom: minZoom };
 	}
 
 	private setZoomLevel(nextZoom: number): void {
@@ -573,7 +580,7 @@ private resolveImageId(
 		const rect = container.getBoundingClientRect();
 		const localX = event.clientX - rect.left;
 		const localY = event.clientY - rect.top;
-		this.adjustZoomLevel(this.zoomLevel + PREVIEW_ZOOM_STEP * (event.deltaY < 0 ? 1 : -1), localX, localY);
+		this.adjustZoomLevel(stepPreviewZoom(this.zoomLevel, event.deltaY < 0 ? 'in' : 'out'), localX, localY);
 	}
 
 	private adjustZoomLevel(nextZoom: number, localX: number, localY: number): void {
@@ -636,8 +643,7 @@ private resolveImageId(
 				startScrollTop: this.previewPinchState.startScrollTop,
 				localX: centerX,
 				localY: centerY,
-				minZoom: MIN_PREVIEW_ZOOM,
-				maxZoom: MAX_PREVIEW_ZOOM,
+				...this.getPreviewZoomBounds(),
 			});
 			this.zoomLevel = pinchState.zoomLevel;
 			this.applyPreviewZoom();

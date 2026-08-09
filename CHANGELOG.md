@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Made preview zoom bounds configurable in plugin settings, with an option to remove the upper limit.
+
 ## [0.3.1] - 2026-08-07
 
 ### Added

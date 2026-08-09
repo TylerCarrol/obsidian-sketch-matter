@@ -51,6 +51,8 @@ export interface SketchMatterSettings {
 	autoRefresh: boolean;
 	showDebugInfo: boolean;
 	gridSpacing: number;
+	previewMinZoom: number;
+	previewMaxZoom: number;
 }
 
 export type LayerRenderOrder = '0-1' | '1-0';
@@ -294,6 +296,8 @@ export const DEFAULT_SETTINGS: SketchMatterSettings = {
 	autoRefresh: true,
 	showDebugInfo: false,
 	gridSpacing: 100,
+	previewMinZoom: 0.25,
+	previewMaxZoom: 4,
 };
 
 export interface SketchMatterTypeDefinition {
