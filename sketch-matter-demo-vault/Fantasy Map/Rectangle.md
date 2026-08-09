@@ -2,7 +2,7 @@
 tags:
   - sketchmatter-type/rect
 sketchmatter-shape: rect
-sketchmatter-layer: "1000"
+sketchmatter-layer: 1000
 sketchmatter-image-id:
   - Fantasy Map
 sketchmatter-coordinates:
@@ -11,5 +11,5 @@ sketchmatter-label-coordinates:
   - 500, 500
 sketchmatter-width: 1085
 sketchmatter-height: 633
-sketchmatter-angle: "1"
+sketchmatter-angle: 1
 ---

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Preview-panel property edits now preserve Obsidian property definitions when saving numbers, checkboxes, lists, dates, and text.
+
 ## [0.5.0] - 2026-08-09
 
 ### Changed

@@ -22,6 +22,7 @@ import {
 	EditorOverlayHandle,
 } from './editor';
 import { renderObjectList, renderObjectDetail } from './ui/editor-panel';
+import { convertPropertyInput } from './property-value';
 
 export const VIEW_TYPE_SKETCH_MATTER = 'sketch-matter-view';
 const PREVIEW_PAN_START_THRESHOLD = 2;
@@ -395,7 +396,7 @@ private renderEditorPanel(): void {
 			async (obj, changes) => {
 				await this.app.fileManager.processFrontMatter(obj.file, (fm: Record<string, unknown>) => {
 					for (const [key, value] of Object.entries(changes)) {
-						fm[key] = value;
+						fm[key] = convertPropertyInput(this.app, key, value);
 					}
 				});
 			},

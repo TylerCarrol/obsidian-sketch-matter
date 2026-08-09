@@ -1,5 +1,6 @@
 import { App } from 'obsidian';
 import { SketchMatterObject, SketchMatterSettings, RESOLVED_TEXTURE_PROPERTY } from '../types';
+import { getObsidianPropertyType } from '../property-value';
 
 /**
  * Properties that are Obsidian internals or managed by the editor overlay
@@ -7,9 +8,24 @@ import { SketchMatterObject, SketchMatterSettings, RESOLVED_TEXTURE_PROPERTY } f
  */
 const SKIP_PROPS = new Set(['position', RESOLVED_TEXTURE_PROPERTY]);
 
-/** Returns true if the value is a plain string or number (safe to edit in a text input). */
-function isSimpleValue(value: unknown): value is string | number {
-	return typeof value === 'string' || typeof value === 'number';
+type EditableValue = string | number | boolean | (string | number)[];
+
+/** Returns true if the value can be represented by the detail form. */
+function isEditableValue(value: unknown): value is EditableValue {
+	return typeof value === 'string'
+		|| typeof value === 'number'
+		|| typeof value === 'boolean'
+		|| (Array.isArray(value) && value.every((item) => typeof item === 'string' || typeof item === 'number'));
+}
+
+function isListPropertyType(propertyType: string | null): boolean {
+	return propertyType === 'multitext' || propertyType === 'aliases' || propertyType === 'tags';
+}
+
+function inputValue(input: HTMLInputElement | HTMLTextAreaElement): string {
+	return input instanceof HTMLInputElement && input.type === 'checkbox'
+		? String(input.checked)
+		: input.value;
 }
 
 /**
@@ -64,7 +80,7 @@ export function renderObjectList(
  * - File name (clickable link to open the note)
  * - Type label
  * - Coordinates (read-only — edited via drag handles on the SVG)
- * - All other simple-valued frontmatter properties as editable text inputs
+ * - All other editable frontmatter properties
  * - A "Save" button
  */
 export function renderObjectDetail(
@@ -124,15 +140,21 @@ export function renderObjectDetail(
 
 	for (const [key, value] of Object.entries(object.properties)) {
 		if (skipKeys.has(key)) continue;
-		if (!isSimpleValue(value)) continue;
+		if (!isEditableValue(value)) continue;
 
 		const row = form.createDiv({ cls: 'sketchmatter-detail-row' });
 		row.createEl('label', { cls: 'sketchmatter-detail-label', text: key });
 
-		const strValue = String(value);
+		const propertyType = getObsidianPropertyType(app, key);
+		const strValue = Array.isArray(value) ? value.join('\n') : String(value);
 		let input: HTMLInputElement | HTMLTextAreaElement;
 
-		if (strValue.length > 60 || strValue.includes('\n')) {
+		if (propertyType === 'checkbox') {
+			const checkbox = row.createEl('input', { cls: 'sketchmatter-detail-checkbox' });
+			checkbox.type = 'checkbox';
+			checkbox.checked = value === true || strValue.toLowerCase() === 'true';
+			input = checkbox;
+		} else if (Array.isArray(value) || isListPropertyType(propertyType) || strValue.length > 60 || strValue.includes('\n')) {
 			const ta = row.createEl('textarea', { cls: 'sketchmatter-detail-input' });
 			ta.value = strValue;
 			ta.rows = 3;
@@ -156,7 +178,7 @@ export function renderObjectDetail(
 		saveBtn.addEventListener('click', () => {
 			const changes: Record<string, string> = {};
 			for (const [key, input] of editableInputs) {
-				changes[key] = input.value;
+				changes[key] = inputValue(input);
 			}
 			saveBtn.disabled = true;
 			saveBtn.textContent = 'Saving…';
