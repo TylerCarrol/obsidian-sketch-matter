@@ -13,6 +13,11 @@ export interface SketchMatterSettings {
 	layerProperty: string;
 	objectShapeProperty: string;
 	objectChildrenProperty: string;
+	angleProperty: string;
+	rectWidthProperty: string;
+	rectHeightProperty: string;
+	rectRxProperty: string;
+	rectRyProperty: string;
 	layerRenderOrder: LayerRenderOrder;
 	coordinatesProperty: string;
 	labelCoordinatesProperty: string;
@@ -269,6 +274,11 @@ export const DEFAULT_SETTINGS: SketchMatterSettings = {
 	imageIdProperty: 'sketchmatter-image-id',
 	imageWidthProperty: 'sketchmatter-width',
 	imageHeightProperty: 'sketchmatter-height',
+	angleProperty: 'sketchmatter-angle',
+	rectWidthProperty: 'sketchmatter-width',
+	rectHeightProperty: 'sketchmatter-height',
+	rectRxProperty: 'sketchmatter-rx',
+	rectRyProperty: 'sketchmatter-ry',
 	imageBackgroundColorProperty: 'sketchmatter-background-color',
 	imageBackgroundImageProperty: 'sketchmatter-background-image',
 	imagePreserveAspectRatioProperty: 'sketchmatter-preserve-aspect-ratio',

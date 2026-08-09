@@ -3,8 +3,8 @@ import { SvgShape, ShapeRenderContext, createSvgElement, toCoordinatePairs } fro
 /**
  * Renders a rectangle from a position and dimensions.
  * Coordinates should be a single point [x, y] representing the top-left corner.
- * Width and height are taken from the object's `width`/`height` properties.
- * Optionally supports `rx`/`ry` for rounded corners.
+ * Width, height, and optional corner radii come from configurable frontmatter keys.
+ * The defaults are `sketchmatter-width`, `sketchmatter-height`, `sketchmatter-rx`, and `sketchmatter-ry`.
  */
 export class RectShape extends SvgShape {
 	readonly name = 'rect';
@@ -15,11 +15,21 @@ export class RectShape extends SvgShape {
 			return null;
 		}
 
-		const [x, y] = points[0]!;
 		const props = context.object.properties;
-
-		const width = this.resolveNumericProp(props, 'width', 50);
-		const height = this.resolveNumericProp(props, 'height', 30);
+		const [firstX, firstY] = points[0]!;
+		const secondPoint = points.length > 1 ? points[1]! : null;
+		const width = this.resolveNumericProp(
+			props,
+			context.settings.rectWidthProperty,
+			secondPoint ? Math.abs(secondPoint[0] - firstX) : 50,
+		);
+		const height = this.resolveNumericProp(
+			props,
+			context.settings.rectHeightProperty,
+			secondPoint ? Math.abs(secondPoint[1] - firstY) : 30,
+		);
+		const x = secondPoint ? Math.min(firstX, secondPoint[0]) : firstX;
+		const y = secondPoint ? Math.min(firstY, secondPoint[1]) : firstY;
 
 		const rect = createSvgElement('rect');
 		rect.setAttribute('x', String(x));
@@ -27,39 +37,57 @@ export class RectShape extends SvgShape {
 		rect.setAttribute('width', String(width));
 		rect.setAttribute('height', String(height));
 
-		const rx = this.resolveOptionalNumericProp(props, 'rx');
+		const rx = this.resolveOptionalNumericProp(props, context.settings.rectRxProperty);
 		if (rx != null) {
 			rect.setAttribute('rx', String(rx));
 		}
 
-		const ry = this.resolveOptionalNumericProp(props, 'ry');
+		const ry = this.resolveOptionalNumericProp(props, context.settings.rectRyProperty);
 		if (ry != null) {
 			rect.setAttribute('ry', String(ry));
 		}
+
+		this.applyRotation(rect, context, x + width / 2, y + height / 2);
 
 		return [rect];
 	}
 
 	private resolveNumericProp(
 		props: Record<string, unknown>,
-		key: string,
+		configuredKey: string,
 		fallback: number,
 	): number {
-		const raw = props[key];
+		const configuredValue = this.parsePositiveNumber(props[configuredKey]);
+		if (configuredValue != null) {
+			return configuredValue;
+		}
+
+		return fallback;
+	}
+
+	private resolveOptionalNumericProp(
+		props: Record<string, unknown>,
+		configuredKey: string,
+	): number | null {
+		const configuredValue = this.parseNonNegativeNumber(props[configuredKey]);
+		if (configuredValue != null) {
+			return configuredValue;
+		}
+
+		return null;
+	}
+
+	private parsePositiveNumber(raw: unknown): number | null {
 		if (raw != null) {
 			const parsed = Number(raw);
 			if (Number.isFinite(parsed) && parsed > 0) {
 				return parsed;
 			}
 		}
-		return fallback;
+		return null;
 	}
 
-	private resolveOptionalNumericProp(
-		props: Record<string, unknown>,
-		key: string,
-	): number | null {
-		const raw = props[key];
+	private parseNonNegativeNumber(raw: unknown): number | null {
 		if (raw != null) {
 			const parsed = Number(raw);
 			if (Number.isFinite(parsed) && parsed >= 0) {

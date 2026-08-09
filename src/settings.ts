@@ -252,6 +252,31 @@ export class SketchMatterSettingTab extends PluginSettingTab {
 								'Frontmatter key for child shape arrays used by composite and multipart objects.',
 								'objectChildrenProperty',
 							),
+							this.textSetting(
+								'Angle',
+								'Frontmatter key for object rotation angle in degrees.',
+								'angleProperty',
+							),
+							this.textSetting(
+								'Rectangle width',
+								'Frontmatter key for rectangle width. Defaults to a sketchmatter-prefixed key.',
+								'rectWidthProperty',
+							),
+							this.textSetting(
+								'Rectangle height',
+								'Frontmatter key for rectangle height. Defaults to a sketchmatter-prefixed key.',
+								'rectHeightProperty',
+							),
+							this.textSetting(
+								'Rectangle corner radius x',
+								'Frontmatter key for rectangle horizontal corner radius.',
+								'rectRxProperty',
+							),
+							this.textSetting(
+								'Rectangle corner radius y',
+								'Frontmatter key for rectangle vertical corner radius.',
+								'rectRyProperty',
+							),
 							{
 								name: 'Layer render order',
 								desc: 'Whether lower-numbered layers render first (0 -> 1) or last (1 -> 0).',

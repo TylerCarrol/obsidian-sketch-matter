@@ -44,6 +44,7 @@ export class TextShape extends SvgShape {
 		text.setAttribute('x', String(x));
 		text.setAttribute('y', String(y));
 		text.textContent = textContent;
+		this.applyRotation(text, context, x, y);
 
 		const properties = context.object.properties;
 		const fontSize = readProperty(

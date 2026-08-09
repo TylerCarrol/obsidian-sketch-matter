@@ -21,6 +21,7 @@ export class CircleShape extends SvgShape {
 		circle.setAttribute('cx', String(cx));
 		circle.setAttribute('cy', String(cy));
 		circle.setAttribute('r', String(radius));
+		this.applyRotation(circle, context, cx, cy);
 
 		return [circle];
 	}

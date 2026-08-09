@@ -41,6 +41,26 @@ export abstract class SvgShape {
 	 */
 	abstract createElements(context: ShapeRenderContext): SVGElement[] | null;
 
+	protected applyRotation(
+		element: SVGElement,
+		context: ShapeRenderContext,
+		anchorX: number,
+		anchorY: number,
+	): void {
+		const angle = this.resolveRotationAngle(context);
+		if (angle == null || angle === 0) {
+			return;
+		}
+
+		const rotation = `rotate(${angle} ${anchorX} ${anchorY})`;
+		const existingTransform = element.getAttribute('transform');
+		if (existingTransform != null && existingTransform.trim().length > 0) {
+			element.setAttribute('transform', `${existingTransform} ${rotation}`);
+		} else {
+			element.setAttribute('transform', rotation);
+		}
+	}
+
 	/**
 	 * Render the shape into the given SVG root element.
 	 * Handles style application and appending to the SVG.
@@ -151,6 +171,17 @@ export abstract class SvgShape {
 
 		return fallback;
 	}
+
+	protected resolveRotationAngle(context: ShapeRenderContext): number | null {
+		const props = context.object.properties;
+		const raw = props[context.settings.angleProperty] ?? props['angle'] ?? props['rotation'];
+		if (raw == null) {
+			return null;
+		}
+
+		const parsed = Number(raw);
+		return Number.isFinite(parsed) ? parsed : null;
+	}
 }
 
 /**
@@ -237,4 +268,23 @@ export function toCoordinatePairs(value: unknown): [number, number][] | null {
 	}
 
 	return null;
+}
+
+/**
+ * Compute the center point of a set of points from their bounding box.
+ */
+export function toPointBoundsCenter(points: [number, number][]): [number, number] {
+	let minX = points[0]![0];
+	let maxX = points[0]![0];
+	let minY = points[0]![1];
+	let maxY = points[0]![1];
+
+	for (const [x, y] of points) {
+		if (x < minX) minX = x;
+		if (x > maxX) maxX = x;
+		if (y < minY) minY = y;
+		if (y > maxY) maxY = y;
+	}
+
+	return [(minX + maxX) / 2, (minY + maxY) / 2];
 }

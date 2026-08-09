@@ -1,4 +1,4 @@
-import { SvgShape, ShapeRenderContext, ShapeStyle, createSvgElement, toCoordinatePairs } from './base';
+import { SvgShape, ShapeRenderContext, ShapeStyle, createSvgElement, toCoordinatePairs, toPointBoundsCenter } from './base';
 import { applyPointNoise } from './noise';
 
 /**
@@ -19,6 +19,8 @@ export class PolylineShape extends SvgShape {
 		const polyline = createSvgElement('polyline');
 		const pointsAttr = finalPoints.map(([x, y]) => `${x},${y}`).join(' ');
 		polyline.setAttribute('points', pointsAttr);
+		const [centerX, centerY] = toPointBoundsCenter(finalPoints);
+		this.applyRotation(polyline, context, centerX, centerY);
 
 		return [polyline];
 	}

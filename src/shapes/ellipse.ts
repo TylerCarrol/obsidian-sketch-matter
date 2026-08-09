@@ -25,6 +25,7 @@ export class EllipseShape extends SvgShape {
 		ellipse.setAttribute('cy', String(cy));
 		ellipse.setAttribute('rx', String(rx));
 		ellipse.setAttribute('ry', String(ry));
+		this.applyRotation(ellipse, context, cx, cy);
 
 		return [ellipse];
 	}

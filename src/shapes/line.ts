@@ -31,6 +31,7 @@ export class LineShape extends SvgShape {
 		line.setAttribute('y1', String(first[1]));
 		line.setAttribute('x2', String(last[0]));
 		line.setAttribute('y2', String(last[1]));
+		this.applyRotation(line, context, (first[0] + last[0]) / 2, (first[1] + last[1]) / 2);
 
 		return [line];
 	}

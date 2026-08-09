@@ -1,4 +1,4 @@
-import { SvgShape, ShapeRenderContext, createSvgElement, toCoordinatePairs } from './base';
+import { SvgShape, ShapeRenderContext, createSvgElement, toCoordinatePairs, toPointBoundsCenter } from './base';
 import { applyPointNoise } from './noise';
 
 /**
@@ -19,6 +19,8 @@ export class PolygonShape extends SvgShape {
 		const polygon = createSvgElement('polygon');
 		const pointsAttr = finalPoints.map(([x, y]) => `${x},${y}`).join(' ');
 		polygon.setAttribute('points', pointsAttr);
+		const [centerX, centerY] = toPointBoundsCenter(finalPoints);
+		this.applyRotation(polygon, context, centerX, centerY);
 
 		return [polygon];
 	}

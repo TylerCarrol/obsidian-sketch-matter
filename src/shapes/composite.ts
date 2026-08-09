@@ -1,4 +1,4 @@
-import { SvgShape, ShapeRenderContext, ShapeStyle, createSvgElement } from './base';
+import { SvgShape, ShapeRenderContext, ShapeStyle, createSvgElement, toCoordinatePairs } from './base';
 import { getShape } from './registry';
 
 /**
@@ -67,6 +67,12 @@ export class CompositeShape extends SvgShape {
 
 		if (group.childElementCount === 0) {
 			return null;
+		}
+
+		const points = toCoordinatePairs(context.coordinates);
+		if (points && points.length > 0) {
+			const [anchorX, anchorY] = points[0]!;
+			this.applyRotation(group, context, anchorX, anchorY);
 		}
 
 		return [group];

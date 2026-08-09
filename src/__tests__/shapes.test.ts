@@ -20,6 +20,7 @@ import '../shapes/index';
 function makeContext(
 	coordinates: unknown,
 	propsOverride: Record<string, unknown> = {},
+	settings = DEFAULT_SETTINGS,
 ): ShapeRenderContext {
 	const file = new TFile('notes/test.md');
 	const object: SketchMatterObject = {
@@ -38,7 +39,7 @@ function makeContext(
 		typeDefinition: null,
 		typeDefinitions: new Map(),
 		coordinates,
-		settings: DEFAULT_SETTINGS,
+		settings,
 	};
 }
 
@@ -46,8 +47,9 @@ function renderShape(
 	shape: { createElements: (ctx: ShapeRenderContext) => SVGElement[] | null },
 	coordinates: unknown,
 	props: Record<string, unknown> = {},
+	settings = DEFAULT_SETTINGS,
 ): SVGElement[] | null {
-	return shape.createElements(makeContext(coordinates, props));
+	return shape.createElements(makeContext(coordinates, props, settings));
 }
 
 function makeContextWithTypeDef(
@@ -262,16 +264,77 @@ describe('RectShape', () => {
 		expect(el.getAttribute('height')).toBe('30'); // default
 	});
 
-	it('respects custom width and height properties', () => {
-		const elements = renderShape(shape, ['0, 0'], { width: 80, height: 60 });
+	it('derives bounds from two coordinates when width and height are not set', () => {
+		const elements = renderShape(shape, ['10, 20', '40, 65']);
+		const el = elements![0]!;
+		expect(el.getAttribute('x')).toBe('10');
+		expect(el.getAttribute('y')).toBe('20');
+		expect(el.getAttribute('width')).toBe('30');
+		expect(el.getAttribute('height')).toBe('45');
+	});
+
+	it('respects the default sketchmatter-prefixed width and height properties', () => {
+		const elements = renderShape(shape, ['0, 0'], {
+			[DEFAULT_SETTINGS.rectWidthProperty]: 80,
+			[DEFAULT_SETTINGS.rectHeightProperty]: 60,
+		});
 		const el = elements![0]!;
 		expect(el.getAttribute('width')).toBe('80');
 		expect(el.getAttribute('height')).toBe('60');
 	});
 
+	it('respects custom configured width and height properties', () => {
+		const customSettings = {
+			...DEFAULT_SETTINGS,
+			rectWidthProperty: 'custom-width',
+			rectHeightProperty: 'custom-height',
+		};
+		const elements = renderShape(
+			shape,
+			['0, 0'],
+			{ 'custom-width': 80, 'custom-height': 60 },
+			customSettings,
+		);
+		const el = elements![0]!;
+		expect(el.getAttribute('width')).toBe('80');
+		expect(el.getAttribute('height')).toBe('60');
+	});
+
+	it('applies rotation using the configured angle property', () => {
+		const elements = renderShape(shape, ['0, 0'], {
+			[DEFAULT_SETTINGS.rectWidthProperty]: 80,
+			[DEFAULT_SETTINGS.rectHeightProperty]: 60,
+			[DEFAULT_SETTINGS.angleProperty]: 90,
+		});
+		expect(elements![0]!.getAttribute('transform')).toBe('rotate(90 40 30)');
+	});
+
+	it('uses a custom configured angle property name', () => {
+		const customSettings = {
+			...DEFAULT_SETTINGS,
+			angleProperty: 'custom-angle',
+		};
+		const elements = renderShape(
+			shape,
+			['0, 0'],
+			{
+				'custom-angle': 45,
+				[DEFAULT_SETTINGS.rectWidthProperty]: 80,
+				[DEFAULT_SETTINGS.rectHeightProperty]: 60,
+			},
+			customSettings,
+		);
+		expect(elements![0]!.getAttribute('transform')).toBe('rotate(45 40 30)');
+	});
+
 	it('sets rx attribute when provided', () => {
-		const elements = renderShape(shape, ['0, 0'], { rx: 5 });
+		const elements = renderShape(shape, ['0, 0'], { [DEFAULT_SETTINGS.rectRxProperty]: 5 });
 		expect(elements![0]!.getAttribute('rx')).toBe('5');
+	});
+
+	it('sets ry attribute when provided', () => {
+		const elements = renderShape(shape, ['0, 0'], { [DEFAULT_SETTINGS.rectRyProperty]: 7 });
+		expect(elements![0]!.getAttribute('ry')).toBe('7');
 	});
 
 	it('does not set rx attribute when not provided', () => {
