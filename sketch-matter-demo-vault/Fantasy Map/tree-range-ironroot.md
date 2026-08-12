@@ -1,7 +1,7 @@
 ---
 tags:
   - sketchmatter-type/trees
-sketchmatter-layer: "411"
+sketchmatter-layer: 411
 sketchmatter-image-id:
   - Fantasy Map
 sketchmatter-coordinates:
@@ -19,6 +19,6 @@ sketchmatter-seed: ironroot-trees
 sketchmatter-scatter-count: "66"
 sketchmatter-scatter-item-width: "26"
 sketchmatter-scatter-item-height: "17"
-sketchmatter-magnitude: "0.3"
-sketchmatter-noise: "10"
+sketchmatter-magnitude: 0.3
+sketchmatter-noise: 10
 ---

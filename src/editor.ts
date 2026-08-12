@@ -9,7 +9,10 @@ const HANDLE_CLASS = 'sketchmatter-handle';
 const HIT_TARGET_CLASS = 'sketchmatter-hit-target';
 const HANDLES_GROUP_CLASS = 'sketchmatter-handles-group';
 const INSERT_MARKER_CLASS = 'sketchmatter-insert-marker';
+const SNAP_POINTS_GROUP_CLASS = 'sketchmatter-snap-points-group';
+const SNAP_POINT_CLASS = 'sketchmatter-snap-point';
 const EDGE_INSERT_THRESHOLD_PX = 10;
+const SNAP_THRESHOLD_PX = 10;
 const DRAG_START_THRESHOLD_PX = 2;
 const SINGLE_POINT_HIT_PADDING = 8;
 const SINGLE_POINT_HIT_RADIUS = 12;
@@ -180,6 +183,12 @@ export interface EditorOverlayHandle {
 	selectByPath(path: string): boolean;
 }
 
+export type SnapMode = 'all-points' | 'same-type' | 'disabled';
+
+export interface EditorOverlayOptions {
+	snapMode?: SnapMode;
+}
+
 /** Remove any previously attached editor overlay from the SVG. */
 export function detachEditorOverlay(svg: SVGSVGElement): void {
 	for (const el of Array.from(svg.querySelectorAll('.' + OVERLAY_CLASS))) {
@@ -203,8 +212,10 @@ export function attachEditorOverlay(
 	settings: SketchMatterSettings,
 	onSelect: (obj: SketchMatterObject | null) => void,
 	onCoordinatesChanged: (obj: SketchMatterObject, points: [number, number][]) => void,
+	options: EditorOverlayOptions = {},
 ): EditorOverlayHandle {
 	detachEditorOverlay(svg);
+	const snapMode = options.snapMode ?? 'disabled';
 
 	const overlay = createSvgEl('g');
 	overlay.setAttribute('class', OVERLAY_CLASS);
@@ -401,7 +412,63 @@ export function attachEditorOverlay(
 
 	let selectedEntry: EditEntry | null = null;
 	let handlesGroup: SVGGElement | null = null;
+	let snapPointsGroup: SVGGElement | null = null;
 	let didDragSelection = false;
+
+	function getSnappableEntries(entry: EditEntry): EditEntry[] {
+		if (snapMode === 'disabled') {
+			return [];
+		}
+		return entries.filter((candidate) =>
+			candidate !== entry
+			&& (snapMode === 'all-points' || candidate.object.typeName === entry.object.typeName),
+		);
+	}
+
+	function findSnapPoint(entry: EditEntry, x: number, y: number): [number, number] | null {
+		const threshold = pixelsToSvgDistance(svg, SNAP_THRESHOLD_PX);
+		let nearestPoint: [number, number] | null = null;
+		let nearestDistance = Number.POSITIVE_INFINITY;
+
+		for (const candidate of getSnappableEntries(entry)) {
+			for (const point of candidate.points) {
+				const distance = Math.hypot(x - point[0], y - point[1]);
+				if (distance <= threshold && distance < nearestDistance) {
+					nearestPoint = point;
+					nearestDistance = distance;
+				}
+			}
+		}
+
+		return nearestPoint ? [...nearestPoint] : null;
+	}
+
+	function clearSnapPoints(): void {
+		snapPointsGroup?.remove();
+		snapPointsGroup = null;
+	}
+
+	function drawSnapPoints(entry: EditEntry): void {
+		clearSnapPoints();
+		const candidates = getSnappableEntries(entry);
+		if (candidates.length === 0) {
+			return;
+		}
+
+		snapPointsGroup = createSvgEl('g');
+		snapPointsGroup.setAttribute('class', SNAP_POINTS_GROUP_CLASS);
+		for (const candidate of candidates) {
+			for (const [x, y] of candidate.points) {
+				const marker = createSvgEl('circle');
+				marker.setAttribute('class', SNAP_POINT_CLASS);
+				marker.setAttribute('cx', String(x));
+				marker.setAttribute('cy', String(y));
+				marker.setAttribute('r', '4');
+				snapPointsGroup.appendChild(marker);
+			}
+		}
+		overlay.appendChild(snapPointsGroup);
+	}
 
 	function hideInsertionMarker(): void {
 		insertionMarker.setAttribute('visibility', 'hidden');
@@ -473,8 +540,9 @@ export function attachEditorOverlay(
 					return;
 				}
 				didMove = true;
-				const nx = dragStartPoint[0] + dx;
-				const ny = dragStartPoint[1] + dy;
+				const rawX = dragStartPoint[0] + dx;
+				const rawY = dragStartPoint[1] + dy;
+				const [nx, ny] = findSnapPoint(entry, rawX, rawY) ?? [rawX, rawY];
 				const previousPoint = entry.points[i] ?? undefined;
 				entry.points[i] = [nx, ny];
 				handle.setAttribute('cx', String(nx));
@@ -531,6 +599,7 @@ export function attachEditorOverlay(
 
 	function deselectInternal(): void {
 		clearHandles();
+		clearSnapPoints();
 		hideInsertionMarker();
 		if (selectedEntry) {
 			selectedEntry.hitTarget.removeAttribute('data-selected');
@@ -542,6 +611,7 @@ export function attachEditorOverlay(
 		deselectInternal();
 		selectedEntry = entry;
 		entry.hitTarget.setAttribute('data-selected', 'true');
+		drawSnapPoints(entry);
 		drawHandles(entry);
 		if (fireCallback) {
 			onSelect(entry.object);

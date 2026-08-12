@@ -20,6 +20,7 @@ import {
 	detachEditorOverlay,
 	serializeCoordinates,
 	EditorOverlayHandle,
+	SnapMode,
 } from './editor';
 import { renderObjectList, renderObjectDetail } from './ui/editor-panel';
 import { convertPropertyInput } from './property-value';
@@ -52,6 +53,7 @@ currentViewId: string | null = null;
 currentImageId: string | null = null;
 showGrid = false;
 editMode = false;
+snapMode: SnapMode = 'disabled';
 zoomLevel = 1;
 selectedObjectPath: string | null = null;
 private editorSidebarEl: HTMLElement | null = null;
@@ -242,6 +244,24 @@ this.currentViewId = this.selector?.value || null;
 void this.renderView();
 });
 
+const snapModeLabel = controls.createEl('label', { cls: 'sketchmatter-control-label' });
+snapModeLabel.createSpan({ text: 'Snap mode' });
+const snapModeSelector = snapModeLabel.createEl('select', { cls: 'sketchmatter-snap-mode-selector' });
+const snapModeOptions: Array<{ value: SnapMode; label: string }> = [
+	{ value: 'all-points', label: 'All points' },
+	{ value: 'same-type', label: 'Same type' },
+	{ value: 'disabled', label: 'Disabled' },
+];
+for (const optionDefinition of snapModeOptions) {
+	const option = snapModeSelector.createEl('option', { text: optionDefinition.label });
+	option.value = optionDefinition.value;
+	option.selected = optionDefinition.value === this.snapMode;
+}
+snapModeSelector.addEventListener('change', () => {
+	this.snapMode = snapModeSelector.value as SnapMode;
+	void this.renderView();
+});
+
 const createActions = controls.createDiv({ cls: 'sketchmatter-create-actions' });
 const createImageButton = this.createPreviewButton(createActions, {
 	label: 'Create image',
@@ -340,6 +360,7 @@ if (this.editMode && this.previewContainer) {
 			this.plugin.settings,
 			(obj) => { this.onObjectSelected(obj); },
 			(obj, pts) => { this.onCoordinatesChanged(obj, pts); },
+			{ snapMode: this.snapMode },
 		);
 		// Restore previous selection after a re-render
 		if (this.selectedObjectPath) {

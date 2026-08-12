@@ -3,7 +3,7 @@ tags:
   - sketchmatter-type/rect
   - sketchmatter-type/label
 sketchmatter-shape: rect
-sketchmatter-layer: 1000
+sketchmatter-layer: 1
 sketchmatter-image-id:
   - Fantasy Map
 sketchmatter-coordinates:

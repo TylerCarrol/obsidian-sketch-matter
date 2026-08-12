@@ -5,12 +5,12 @@ import { TFile } from '../__mocks__/obsidian';
 
 type Point = [number, number];
 
-function makeObject(id: string, coordinates: unknown): SketchMatterObject {
+function makeObject(id: string, coordinates: unknown, typeName = 'river'): SketchMatterObject {
 	return {
 		objectId: id,
 		sourcePath: `notes/${id}.md`,
 		file: new TFile(`notes/${id}.md`),
-		typeName: 'river',
+		typeName,
 		layer: 100,
 		coordinates,
 		coordinatesProperty: DEFAULT_SETTINGS.coordinatesProperty,
@@ -144,5 +144,105 @@ describe('attachEditorOverlay', () => {
 		expect(onCoordinatesChanged).toHaveBeenCalledTimes(1);
 		const insertedPoints = onCoordinatesChanged.mock.calls[0]?.[1] as Point[];
 		expect(insertedPoints).toHaveLength(3);
+	});
+
+	it('snaps a dragged point to a nearby point on any other object', () => {
+		const svg = makeSvg();
+		document.body.appendChild(svg);
+
+		const movingObject = makeObject('path-3', ['50, 20', '150, 20']);
+		const targetObject = makeObject('target-1', ['70, 20'], 'continent');
+		const onCoordinatesChanged = vi.fn();
+
+		attachEditorOverlay(
+			svg,
+			[movingObject, targetObject],
+			new Map(),
+			DEFAULT_SETTINGS,
+			() => { /* noop */ },
+			onCoordinatesChanged,
+			{ snapMode: 'all-points' },
+		);
+
+		const hitTarget = svg.querySelector('.sketchmatter-hit-target');
+		hitTarget!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+		expect(svg.querySelectorAll('.sketchmatter-snap-point')).toHaveLength(1);
+
+		const handle = svg.querySelector<SVGCircleElement>('.sketchmatter-handle');
+		const [startX, startY] = userToClient([50, 20]);
+		const [nearTargetX, nearTargetY] = userToClient([68, 20]);
+		handle!.dispatchEvent(pointerEvent('pointerdown', startX, startY));
+		handle!.dispatchEvent(pointerEvent('pointermove', nearTargetX, nearTargetY));
+		handle!.dispatchEvent(pointerEvent('pointerup', nearTargetX, nearTargetY));
+
+		const movedPoints = onCoordinatesChanged.mock.calls[0]?.[1] as Point[];
+		expect(movedPoints[0]).toEqual([70, 20]);
+	});
+
+	it('shows and snaps only to points on objects of the same type', () => {
+		const svg = makeSvg();
+		document.body.appendChild(svg);
+
+		const movingObject = makeObject('path-4', ['50, 20', '150, 20']);
+		const differentTypeTarget = makeObject('target-2', ['68, 20'], 'continent');
+		const sameTypeTarget = makeObject('target-3', ['70, 20']);
+		const onCoordinatesChanged = vi.fn();
+
+		attachEditorOverlay(
+			svg,
+			[movingObject, differentTypeTarget, sameTypeTarget],
+			new Map(),
+			DEFAULT_SETTINGS,
+			() => { /* noop */ },
+			onCoordinatesChanged,
+			{ snapMode: 'same-type' },
+		);
+
+		const hitTarget = svg.querySelector('.sketchmatter-hit-target');
+		hitTarget!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+		expect(svg.querySelectorAll('.sketchmatter-snap-point')).toHaveLength(1);
+
+		const handle = svg.querySelector<SVGCircleElement>('.sketchmatter-handle');
+		const [startX, startY] = userToClient([50, 20]);
+		const [differentTargetX, differentTargetY] = userToClient([68, 20]);
+		handle!.dispatchEvent(pointerEvent('pointerdown', startX, startY));
+		handle!.dispatchEvent(pointerEvent('pointermove', differentTargetX, differentTargetY));
+		handle!.dispatchEvent(pointerEvent('pointerup', differentTargetX, differentTargetY));
+
+		const movedPoints = onCoordinatesChanged.mock.calls[0]?.[1] as Point[];
+		expect(movedPoints[0]).toEqual([70, 20]);
+	});
+
+	it('does not show or snap to nearby points when snapping is disabled', () => {
+		const svg = makeSvg();
+		document.body.appendChild(svg);
+
+		const movingObject = makeObject('path-5', ['50, 20', '150, 20']);
+		const targetObject = makeObject('target-4', ['70, 20']);
+		const onCoordinatesChanged = vi.fn();
+
+		attachEditorOverlay(
+			svg,
+			[movingObject, targetObject],
+			new Map(),
+			DEFAULT_SETTINGS,
+			() => { /* noop */ },
+			onCoordinatesChanged,
+			{ snapMode: 'disabled' },
+		);
+
+		const hitTarget = svg.querySelector('.sketchmatter-hit-target');
+		hitTarget!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+		expect(svg.querySelectorAll('.sketchmatter-snap-point')).toHaveLength(0);
+
+		const handle = svg.querySelector<SVGCircleElement>('.sketchmatter-handle');
+		const [startX, startY] = userToClient([50, 20]);
+		const [nearTargetX, nearTargetY] = userToClient([68, 20]);
+		handle!.dispatchEvent(pointerEvent('pointerdown', startX, startY));
+		handle!.dispatchEvent(pointerEvent('pointermove', nearTargetX, nearTargetY));
+		handle!.dispatchEvent(pointerEvent('pointerup', nearTargetX, nearTargetY));
+
+		const movedPoints = onCoordinatesChanged.mock.calls[0]?.[1] as Point[];
+		expect(movedPoints[0]).toEqual([68, 20]);
 	});
 });

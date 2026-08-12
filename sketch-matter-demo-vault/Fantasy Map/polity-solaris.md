@@ -7,6 +7,8 @@ sketchmatter-coordinates:
   - 966, 5
   - 1050, 308
   - 545, 309
+  - 542, 275
+  - 525, 66
 sketchmatter-image-id: Fantasy Map
 sketchmatter-fill: "#cc3333"
 sketchmatter-stroke: "#8f1c1c"

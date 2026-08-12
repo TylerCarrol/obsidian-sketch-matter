@@ -454,6 +454,19 @@
 	pointer-events: all;
 }
 
+.sketchmatter-snap-points-group,
+.sketchmatter-snap-point {
+	pointer-events: none;
+}
+
+.sketchmatter-snap-point {
+	fill: var(--text-muted, #8a8a8a);
+	fill-opacity: 0.35;
+	stroke: var(--text-muted, #8a8a8a);
+	stroke-opacity: 0.6;
+	stroke-width: 1.5;
+}
+
 .sketchmatter-handle {
 	fill: white;
 	stroke: var(--interactive-accent, #7f6df2);

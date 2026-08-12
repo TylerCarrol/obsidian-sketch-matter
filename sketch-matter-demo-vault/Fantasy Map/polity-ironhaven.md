@@ -5,7 +5,7 @@ sketchmatter-layer: 410
 sketchmatter-coordinates:
   - 133, 326
   - 375, 228
-  - 443, 312
+  - 434, 332
   - 399, 611
   - 111, 608
   - 50, 418

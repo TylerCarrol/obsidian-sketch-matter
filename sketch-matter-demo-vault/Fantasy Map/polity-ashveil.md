@@ -5,6 +5,8 @@ sketchmatter-layer: 400
 sketchmatter-coordinates:
   - 37, 34
   - 521, 22
+  - 525, 66
+  - 542, 275
   - 545, 317
   - 21, 380
 sketchmatter-image-id: Fantasy Map
