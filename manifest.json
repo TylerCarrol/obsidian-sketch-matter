@@ -1,7 +1,7 @@
 {
 	"id": "sketch-matter",
 	"name": "SketchMatter",
-	"version": "0.7.0",
+	"version": "0.8.0",
 	"minAppVersion": "1.13.0",
 	"description": "Render SVG images from frontmatter-defined objects, layers, and views.",
 	"author": "Tyler Carrol",

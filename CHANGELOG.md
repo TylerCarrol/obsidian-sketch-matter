@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-08-12
+
 ### Added
 
 - Added preview point snapping with all-points, same-type, and disabled modes, plus visible snap targets.
@@ -115,7 +117,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Demo vault, including a Logo demo and sample maps.
 - Automated test coverage for metadata parsing, rendering, shapes, and noise helpers.
 
-[Unreleased]: https://github.com/TylerCarrol/obsidian-sketch-matter/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/TylerCarrol/obsidian-sketch-matter/compare/v0.8.0...HEAD
+
+[0.8.0]: https://github.com/TylerCarrol/obsidian-sketch-matter/compare/v0.7.0...v0.8.0
 
 [0.7.0]: https://github.com/TylerCarrol/obsidian-sketch-matter/compare/v0.6.0...v0.7.0
 
