@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added preview point snapping with all-points, same-type, and disabled modes, plus visible snap targets.
 
+### Fixed
+
+- Rectangle children in type definitions now respect native `width` and `height` properties.
+
 ## [0.7.0] - 2026-08-09
 
 ### Fixed

@@ -584,6 +584,9 @@ describe('default tree type definition', () => {
 		expect(group.tagName.toLowerCase()).toBe('g');
 		expect(group.querySelectorAll('polygon').length).toBe(3);
 		expect(group.querySelectorAll('rect').length).toBe(1);
+		const trunk = group.querySelector('rect')!;
+		expect(trunk.getAttribute('width')).toBe('4');
+		expect(trunk.getAttribute('height')).toBe('10');
 	});
 
 	it('offsets tree children when the parent coordinates use the legacy numeric pair format', () => {

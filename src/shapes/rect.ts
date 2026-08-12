@@ -3,7 +3,8 @@ import { SvgShape, ShapeRenderContext, createSvgElement, toCoordinatePairs } fro
 /**
  * Renders a rectangle from a position and dimensions.
  * Coordinates should be a single point [x, y] representing the top-left corner.
- * Width, height, and optional corner radii come from configurable frontmatter keys.
+ * Width and height come from configurable frontmatter keys or native type-definition properties.
+ * Optional corner radii come from configurable frontmatter keys.
  * The defaults are `sketchmatter-width`, `sketchmatter-height`, `sketchmatter-rx`, and `sketchmatter-ry`.
  */
 export class RectShape extends SvgShape {
@@ -21,11 +22,13 @@ export class RectShape extends SvgShape {
 		const width = this.resolveNumericProp(
 			props,
 			context.settings.rectWidthProperty,
+			'width',
 			secondPoint ? Math.abs(secondPoint[0] - firstX) : 50,
 		);
 		const height = this.resolveNumericProp(
 			props,
 			context.settings.rectHeightProperty,
+			'height',
 			secondPoint ? Math.abs(secondPoint[1] - firstY) : 30,
 		);
 		const x = secondPoint ? Math.min(firstX, secondPoint[0]) : firstX;
@@ -55,11 +58,16 @@ export class RectShape extends SvgShape {
 	private resolveNumericProp(
 		props: Record<string, unknown>,
 		configuredKey: string,
+		nativeKey: string,
 		fallback: number,
 	): number {
 		const configuredValue = this.parsePositiveNumber(props[configuredKey]);
 		if (configuredValue != null) {
 			return configuredValue;
+		}
+		const nativeValue = this.parsePositiveNumber(props[nativeKey]);
+		if (nativeValue != null) {
+			return nativeValue;
 		}
 
 		return fallback;
