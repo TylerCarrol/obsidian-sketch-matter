@@ -6,5 +6,6 @@
 	"description": "Render SVG images from frontmatter-defined objects, layers, and views.",
 	"author": "Tyler Carrol",
 	"authorUrl": "https://github.com/TylerCarrol",
+	"fundingUrl": "buymeacoffee.com/tylercarrol",
 	"isDesktopOnly": false
 }
