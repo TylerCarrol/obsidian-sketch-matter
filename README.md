@@ -1,6 +1,7 @@
 # SketchMatter Plugin for Obsidian
 
 [![GitHub Release](https://img.shields.io/github/v/release/TylerCarrol/obsidian-sketch-matter?logo=github&sort=semver)](https://github.com/TylerCarrol/obsidian-sketch-matter/releases/latest) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/TylerCarrol/obsidian-sketch-matter/blob/main/LICENSE) [![Lint](https://github.com/TylerCarrol/obsidian-sketch-matter/actions/workflows/lint.yml/badge.svg)](https://github.com/TylerCarrol/obsidian-sketch-matter/actions/workflows/lint.yml) [![Test](https://github.com/TylerCarrol/obsidian-sketch-matter/actions/workflows/test.yml/badge.svg)](https://github.com/TylerCarrol/obsidian-sketch-matter/actions/workflows/test.yml)
+[![BuyMeACoffee](https://raw.githubusercontent.com/pachadotdev/buymeacoffee-badges/main/bmc-yellow.svg)](https://buymeacoffee.com/tylercarrol)
 
 ![sketch-matter logo](./sketch-matter-demo-vault/sketch-matter-export-all-logo.svg)
 > This logo was created using this plugin and is available in the `/sketch-matter-demo-vault`
