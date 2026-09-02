@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-09-02
+
 ### Added
 
 - Funding URL
@@ -121,7 +123,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Demo vault, including a Logo demo and sample maps.
 - Automated test coverage for metadata parsing, rendering, shapes, and noise helpers.
 
-[Unreleased]: https://github.com/TylerCarrol/obsidian-sketch-matter/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/TylerCarrol/obsidian-sketch-matter/compare/v0.8.1...HEAD
+
+[0.8.1]: https://github.com/TylerCarrol/obsidian-sketch-matter/compare/v0.8.0...v0.8.1
 
 [0.8.0]: https://github.com/TylerCarrol/obsidian-sketch-matter/compare/v0.7.0...v0.8.0
 
