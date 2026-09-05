@@ -190,6 +190,7 @@ export function renderObjectList(
 	onSelect: (obj: SketchMatterObject) => void,
 ): void {
 	container.empty();
+	container.removeClass('sketchmatter-detail-panel');
 
 	const heading = container.createDiv({ cls: 'sketchmatter-panel-heading' });
 	heading.createSpan({ text: 'Objects' });
@@ -257,6 +258,7 @@ export function renderObjectDetail(
 	onDeselect: () => void,
 ): void {
 	container.empty();
+	container.addClass('sketchmatter-detail-panel');
 
 	// ── Back button ────────────────────────────────────────────────
 	const backBtn = container.createEl('button', {
@@ -326,6 +328,7 @@ const editableInputs = new Map<string, EditableInput>();
 	const objectTypeTags = new Set(
 		settings.typeDefinitions.map((definition) => `${settings.typeTagPrefix}/${definition.name}`),
 	);
+	let notifyChanged = (): void => {};
 
 	for (const group of groupOrder) {
 		const properties = groupedProperties.get(group);
@@ -398,7 +401,10 @@ const editableInputs = new Map<string, EditableInput>();
 						});
 						removeButton.addEventListener('click', () => {
 							void confirmTagRemoval(app, formatTagName(tag, settings)).then((confirmed) => {
-								if (confirmed) updateTagEditor(tags.filter((currentTag) => currentTag !== tag));
+								if (confirmed) {
+									updateTagEditor(tags.filter((currentTag) => currentTag !== tag));
+									notifyChanged();
+								}
 							});
 						});
 					}
@@ -415,6 +421,7 @@ const editableInputs = new Map<string, EditableInput>();
 					if (!selectedTag || currentTags.includes(selectedTag)) return;
 					currentTags.push(selectedTag);
 					updateTagEditor(currentTags);
+					notifyChanged();
 					picker.value = '';
 					picker.hidden = true;
 				});
@@ -441,20 +448,66 @@ const editableInputs = new Map<string, EditableInput>();
 		}
 	}
 
+	const changeStatus = container.createDiv({ cls: 'sketchmatter-panel-change-status' });
+	let autoSaveTimer: number | null = null;
+	let saving = false;
+	let dirty = false;
+	const collectChanges = (): Record<string, string> => {
+		const changes: Record<string, string> = {};
+		for (const [key, input] of editableInputs) {
+			changes[key] = inputValue(input);
+		}
+		return changes;
+	};
+	const saveChanges = async (): Promise<void> => {
+		if (saving) return;
+		saving = true;
+		changeStatus.removeClass('is-unsaved');
+		changeStatus.setText('Saving…');
+		try {
+			await onPropertyChanged(object, collectChanges());
+			dirty = false;
+			changeStatus.setText('Saved');
+			window.setTimeout(() => {
+				if (!dirty) changeStatus.setText('');
+			}, 1500);
+		} catch {
+			changeStatus.removeClass('is-unsaved');
+			changeStatus.setText('Could not save changes');
+		} finally {
+			saving = false;
+		}
+	};
+	notifyChanged = (): void => {
+		dirty = true;
+		if (!settings.autoSaveObjectEditor) {
+			changeStatus.addClass('is-unsaved');
+			changeStatus.setText('Unsaved changes');
+			return;
+		}
+		if (autoSaveTimer !== null) window.clearTimeout(autoSaveTimer);
+		autoSaveTimer = window.setTimeout(() => {
+			autoSaveTimer = null;
+			void saveChanges();
+		}, 400);
+	};
+	for (const input of editableInputs.values()) {
+		if (input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement || input instanceof HTMLSelectElement) {
+			input.addEventListener('input', notifyChanged);
+			input.addEventListener('change', notifyChanged);
+		}
+	}
+
 	// ── Save button ─────────────────────────────────────────────────
-	if (editableInputs.size > 0) {
+	if (editableInputs.size > 0 && !settings.autoSaveObjectEditor) {
 		const saveBtn = container.createEl('button', {
 			cls: 'sketchmatter-panel-save-btn',
 			text: 'Save',
 		});
 		saveBtn.addEventListener('click', () => {
-			const changes: Record<string, string> = {};
-			for (const [key, input] of editableInputs) {
-				changes[key] = inputValue(input);
-			}
 			saveBtn.disabled = true;
 			saveBtn.textContent = 'Saving…';
-			onPropertyChanged(object, changes).then(() => {
+			void saveChanges().then(() => {
 				saveBtn.disabled = false;
 				saveBtn.textContent = 'Saved ✓';
 				window.setTimeout(() => {

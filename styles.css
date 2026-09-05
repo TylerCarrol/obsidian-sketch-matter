@@ -281,6 +281,12 @@
 	box-sizing: border-box;
 }
 
+.sketchmatter-editor-sidebar.sketchmatter-detail-panel {
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
 /* ── Panel heading ──────────────────────────────────────────────── */
 
 .sketchmatter-panel-heading {
@@ -406,7 +412,11 @@
 }
 
 .sketchmatter-detail-form {
+	flex: 1;
+	min-height: 0;
 	margin-top: 8px;
+	overflow-y: auto;
+	padding-right: 4px;
 }
 
 .sketchmatter-detail-section {
@@ -554,6 +564,18 @@
 .sketchmatter-panel-save-btn:disabled {
 	opacity: 0.6;
 	cursor: default;
+}
+
+.sketchmatter-panel-change-status {
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+	min-height: 1.2em;
+	margin-top: 8px;
+}
+
+.sketchmatter-panel-change-status.is-unsaved {
+	color: var(--text-warning);
+	font-weight: var(--font-semibold);
 }
 
 /* ── SVG editor overlay styles ──────────────────────────────────── */

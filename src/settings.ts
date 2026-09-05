@@ -141,6 +141,15 @@ export class SketchMatterSettingTab extends PluginSettingTab {
 						},
 					},
 					{
+						name: 'Auto-save object editor',
+						desc: 'Save object editor changes automatically. When off, the editor shows an unsaved changes message until you select Save.',
+						control: {
+							type: 'toggle',
+							key: 'autoSaveObjectEditor',
+							defaultValue: DEFAULT_SETTINGS.autoSaveObjectEditor,
+						},
+					},
+					{
 						name: 'Panel open location',
 						desc: 'Choose where the open panel command and ribbon button open the SketchMatter preview.',
 						control: {

@@ -14,7 +14,8 @@ sketchmatter-font-size: 14
 sketchmatter-font-style:
   - italic
 sketchmatter-font-color: "#2c2c2c"
-sketchmatter-image-id: Fantasy Map
+sketchmatter-image-id:
+  - Fantasy Map
 ---
 
 # Ashport
