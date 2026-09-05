@@ -112,8 +112,6 @@ export class TextShape extends SvgShape {
 		if (!existingFill || existingFill.trim().length === 0) {
 			element.setAttribute('fill', style.fill === 'transparent' ? '#333333' : style.fill);
 		}
-		element.setAttribute('stroke', style.stroke === '#333333' ? 'none' : style.stroke);
-		element.setAttribute('stroke-width', style.strokeWidth);
 		if (style.opacity !== '1') {
 			element.setAttribute('opacity', style.opacity);
 		}

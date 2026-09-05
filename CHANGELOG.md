@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - New objects now include the resolved shape in frontmatter.
+- Labels now use their font color and ignore object stroke and stroke width settings.
 
 ## [0.8.2] - 2026-09-03
 

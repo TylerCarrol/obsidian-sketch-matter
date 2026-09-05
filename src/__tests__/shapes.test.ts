@@ -424,9 +424,14 @@ describe('TextShape', () => {
 			makeContext(['100, 200'], {
 				[DEFAULT_SETTINGS.labelTextProperty]: 'Bright',
 				[DEFAULT_SETTINGS.fontColorProperty]: '#e8c060',
+				[DEFAULT_SETTINGS.strokeProperty]: '#222222',
+				[DEFAULT_SETTINGS.strokeWidthProperty]: '3',
 			}),
 		);
-		expect(svg.children[0]!.getAttribute('fill')).toBe('#e8c060');
+		const label = svg.children[0]!;
+		expect(label.getAttribute('fill')).toBe('#e8c060');
+		expect(label.getAttribute('stroke')).toBeNull();
+		expect(label.getAttribute('stroke-width')).toBeNull();
 	});
 
 	it('uses the label-specific angle property when provided', () => {
