@@ -502,6 +502,7 @@ export async function createObjectDefinitionFlow(
 		'---',
 		'tags:',
 		`  - ${objectTag}`,
+		`${settings.objectShapeProperty}: ${quoteYaml(shape)}`,
 		`${settings.layerProperty}: ${settings.defaultLayer}`,
 		...yamlListLines(settings.imageIdProperty, values.imageIds),
 		...yamlListLines(settings.coordinatesProperty, defaultCoords),
