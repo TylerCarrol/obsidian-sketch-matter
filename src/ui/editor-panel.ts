@@ -52,22 +52,33 @@ export function renderObjectList(
 	}
 
 	const ul = container.createEl('ul', { cls: 'sketchmatter-object-list' });
+	const objectsBySourcePath = new Map<string, SketchMatterObject[]>();
+	for (const object of objects) {
+		const sourceObjects = objectsBySourcePath.get(object.sourcePath) ?? [];
+		sourceObjects.push(object);
+		objectsBySourcePath.set(object.sourcePath, sourceObjects);
+	}
 
-	for (const obj of objects) {
+	for (const sourceObjects of objectsBySourcePath.values()) {
+		const obj = sourceObjects[0]!;
 		const li = ul.createEl('li', { cls: 'sketchmatter-object-list-item' });
 
-		const nameSpan = li.createSpan({ cls: 'sketchmatter-object-name', text: obj.file.basename });
-		const typeSpan = li.createSpan({ cls: 'sketchmatter-object-type', text: obj.typeName });
+		li.createSpan({ cls: 'sketchmatter-object-name', text: obj.file.basename });
+		const types = li.createDiv({ cls: 'sketchmatter-object-types' });
+		for (const sourceObject of sourceObjects) {
+			const typeButton = types.createEl('button', {
+				cls: 'sketchmatter-object-type',
+				text: sourceObject.typeName,
+			});
+			typeButton.addEventListener('click', (event) => {
+				event.stopPropagation();
+				onSelect(sourceObject);
+			});
+		}
 
-		// Only items with ≥2 coordinate points are interactively editable via handles;
-		// still allow selecting any object to view / edit its properties.
 		li.addEventListener('click', () => {
 			onSelect(obj);
 		});
-
-		// Suppress unused variable warning for typeSpan (it is appended via createEl)
-		void nameSpan;
-		void typeSpan;
 	}
 }
 
@@ -87,8 +98,10 @@ export function renderObjectDetail(
 	container: HTMLElement,
 	app: App,
 	object: SketchMatterObject,
+	relatedObjects: SketchMatterObject[],
 	settings: SketchMatterSettings,
 	onPropertyChanged: (obj: SketchMatterObject, changes: Record<string, string>) => Promise<void>,
+	onTypeSelected: (obj: SketchMatterObject) => void,
 	onDeselect: () => void,
 ): void {
 	container.empty();
@@ -113,11 +126,22 @@ export function renderObjectDetail(
 		void app.workspace.openLinkText(object.file.path, '', false);
 	});
 
-	// ── Type label ─────────────────────────────────────────────────
-	container.createDiv({
-		cls: 'sketchmatter-detail-type',
-		text: `Type: ${object.typeName}`,
-	});
+	// ── Type selector ───────────────────────────────────────────────
+	const typeRow = container.createDiv({ cls: 'sketchmatter-detail-type' });
+	typeRow.createSpan({ text: 'Type: ' });
+	const relatedTypes = relatedObjects.length > 0 ? relatedObjects : [object];
+	for (const relatedObject of relatedTypes) {
+		const typeButton = typeRow.createEl('button', {
+			cls: 'sketchmatter-detail-type-button',
+			text: relatedObject.typeName,
+		});
+		typeButton.classList.toggle('is-active', relatedObject.objectId === object.objectId);
+		typeButton.addEventListener('click', () => {
+			if (relatedObject.objectId !== object.objectId) {
+				onTypeSelected(relatedObject);
+			}
+		});
+	}
 
 	// ── Coordinates (read-only) ─────────────────────────────────────
 	const coordKey = object.coordinatesProperty;

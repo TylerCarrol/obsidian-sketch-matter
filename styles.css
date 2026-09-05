@@ -323,8 +323,23 @@
 }
 
 .sketchmatter-object-type {
-	font-size: var(--font-ui-smaller);
+	background: none;
+	border: none;
 	color: var(--text-faint);
+	cursor: pointer;
+	font-size: var(--font-ui-smaller);
+	flex-shrink: 0;
+	padding: 0;
+}
+
+.sketchmatter-object-type:hover,
+.sketchmatter-detail-type-button:hover {
+	color: var(--text-accent);
+}
+
+.sketchmatter-object-types {
+	display: flex;
+	gap: 8px;
 	flex-shrink: 0;
 }
 
@@ -342,6 +357,20 @@
 
 .sketchmatter-panel-back-btn:hover {
 	text-decoration: underline;
+}
+
+.sketchmatter-detail-type-button {
+	background: none;
+	border: none;
+	color: var(--text-faint);
+	cursor: pointer;
+	font-size: inherit;
+	padding: 0 3px;
+}
+
+.sketchmatter-detail-type-button.is-active {
+	color: var(--text-normal);
+	font-weight: var(--font-semibold);
 }
 
 .sketchmatter-detail-name-row {

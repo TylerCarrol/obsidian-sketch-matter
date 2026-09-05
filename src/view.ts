@@ -434,6 +434,7 @@ private renderEditorPanel(): void {
 			this.editorSidebarEl,
 			this.app,
 			selectedObj,
+			this.currentFilteredObjects.filter((object) => object.sourcePath === selectedObj.sourcePath),
 			this.plugin.settings,
 			async (obj, changes) => {
 				await this.app.fileManager.processFrontMatter(obj.file, (fm: Record<string, unknown>) => {
@@ -441,6 +442,9 @@ private renderEditorPanel(): void {
 						fm[key] = convertPropertyInput(this.app, key, value);
 					}
 				});
+			},
+			(obj) => {
+				this.editorOverlayHandle?.selectByPath(obj.objectId);
 			},
 			() => {
 				this.selectedObjectPath = null;
