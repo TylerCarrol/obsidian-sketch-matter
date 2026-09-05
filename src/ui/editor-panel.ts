@@ -1,6 +1,7 @@
 import { App } from 'obsidian';
 import { SketchMatterObject, SketchMatterSettings, RESOLVED_TEXTURE_PROPERTY } from '../types';
 import { getObsidianPropertyType } from '../property-value';
+import { getRegisteredShapeNames } from '../shapes';
 
 /**
  * Properties that are Obsidian internals or managed by the editor overlay
@@ -8,6 +9,7 @@ import { getObsidianPropertyType } from '../property-value';
  */
 const SKIP_PROPS = new Set(['position', RESOLVED_TEXTURE_PROPERTY]);
 
+type EditableInput = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
 type EditableValue = string | number | boolean | (string | number)[];
 
 /** Returns true if the value can be represented by the detail form. */
@@ -22,10 +24,37 @@ function isListPropertyType(propertyType: string | null): boolean {
 	return propertyType === 'multitext' || propertyType === 'aliases' || propertyType === 'tags';
 }
 
-function inputValue(input: HTMLInputElement | HTMLTextAreaElement): string {
+function inputValue(input: EditableInput): string {
 	return input instanceof HTMLInputElement && input.type === 'checkbox'
 		? String(input.checked)
 		: input.value;
+}
+
+function propertyGroup(
+	key: string,
+	settings: SketchMatterSettings,
+): 'Shape' | 'Rect' | 'Label' | 'Object' {
+	if (key === settings.objectShapeProperty) return 'Shape';
+
+	const rectKeys = new Set([
+		settings.rectWidthProperty,
+		settings.rectHeightProperty,
+		settings.rectRxProperty,
+		settings.rectRyProperty,
+		settings.angleProperty,
+	]);
+	if (rectKeys.has(key)) return 'Rect';
+
+	const labelKeys = new Set([
+		settings.labelTextProperty,
+		settings.labelAngleProperty,
+		settings.fontFamilyProperty,
+		settings.fontSizeProperty,
+		settings.fontStyleProperty,
+		settings.fontColorProperty,
+	]);
+	if (labelKeys.has(key)) return 'Label';
+	return 'Object';
 }
 
 /**
@@ -144,53 +173,75 @@ export function renderObjectDetail(
 	}
 
 	// ── Coordinates (read-only) ─────────────────────────────────────
-	const coordKey = object.coordinatesProperty;
-	const coordValue = object.properties[coordKey];
-	if (coordValue !== undefined) {
-		const coordRow = container.createDiv({ cls: 'sketchmatter-detail-row sketchmatter-detail-readonly' });
-		coordRow.createEl('label', { cls: 'sketchmatter-detail-label', text: coordKey });
-		coordRow.createSpan({
-			cls: 'sketchmatter-detail-coord-hint',
-			text: '(edit via handles on the map)',
-		});
-	}
-
 	// ── Editable properties ─────────────────────────────────────────
-	const editableInputs = new Map<string, HTMLInputElement | HTMLTextAreaElement>();
+const editableInputs = new Map<string, EditableInput>();
 
 	const form = container.createDiv({ cls: 'sketchmatter-detail-form' });
 
-	const skipKeys = new Set([...SKIP_PROPS, coordKey]);
+	const skipKeys = new Set([
+		...SKIP_PROPS,
+		settings.coordinatesProperty,
+		settings.labelCoordinatesProperty,
+	]);
+	const groupedProperties = new Map<'Shape' | 'Rect' | 'Label' | 'Object', [string, EditableValue][]>();
 
 	for (const [key, value] of Object.entries(object.properties)) {
 		if (skipKeys.has(key)) continue;
 		if (!isEditableValue(value)) continue;
+		const group = propertyGroup(key, settings);
+		const properties = groupedProperties.get(group) ?? [];
+		properties.push([key, value]);
+		groupedProperties.set(group, properties);
+	}
 
-		const row = form.createDiv({ cls: 'sketchmatter-detail-row' });
-		row.createEl('label', { cls: 'sketchmatter-detail-label', text: key });
+	const groupOrder: Array<'Object' | 'Shape' | 'Rect' | 'Label'> = ['Object', 'Shape', 'Rect', 'Label'];
+	const shapeNames = new Set([
+		...getRegisteredShapeNames(),
+		...settings.typeDefinitions.map((definition) => definition.shape).filter((shape): shape is string => Boolean(shape)),
+	]);
 
-		const propertyType = getObsidianPropertyType(app, key);
-		const strValue = Array.isArray(value) ? value.join('\n') : String(value);
-		let input: HTMLInputElement | HTMLTextAreaElement;
+	for (const group of groupOrder) {
+		const properties = groupedProperties.get(group);
+		if (!properties || properties.length === 0) continue;
 
-		if (propertyType === 'checkbox') {
-			const checkbox = row.createEl('input', { cls: 'sketchmatter-detail-checkbox' });
-			checkbox.type = 'checkbox';
-			checkbox.checked = value === true || strValue.toLowerCase() === 'true';
-			input = checkbox;
-		} else if (Array.isArray(value) || isListPropertyType(propertyType) || strValue.length > 60 || strValue.includes('\n')) {
-			const ta = row.createEl('textarea', { cls: 'sketchmatter-detail-input' });
-			ta.value = strValue;
-			ta.rows = 3;
-			input = ta;
-		} else {
-			const inp = row.createEl('input', { cls: 'sketchmatter-detail-input' });
-			inp.type = 'text';
-			inp.value = strValue;
-			input = inp;
+		const section = form.createDiv({ cls: 'sketchmatter-detail-section' });
+		section.createEl('h4', { cls: 'sketchmatter-detail-section-heading', text: group });
+
+		for (const [key, value] of properties) {
+			const row = section.createDiv({ cls: 'sketchmatter-detail-row' });
+			row.createEl('label', { cls: 'sketchmatter-detail-label', text: key });
+
+			const propertyType = getObsidianPropertyType(app, key);
+			const strValue = Array.isArray(value) ? value.join('\n') : String(value);
+			let input: EditableInput;
+
+			if (key === settings.objectShapeProperty) {
+				const select = row.createEl('select', { cls: 'sketchmatter-detail-input' });
+				if (strValue && !shapeNames.has(strValue)) shapeNames.add(strValue);
+				for (const shapeName of [...shapeNames].sort()) {
+					select.createEl('option', { text: shapeName, value: shapeName });
+				}
+				select.value = strValue;
+				input = select;
+			} else if (propertyType === 'checkbox') {
+				const checkbox = row.createEl('input', { cls: 'sketchmatter-detail-checkbox' });
+				checkbox.type = 'checkbox';
+				checkbox.checked = value === true || strValue.toLowerCase() === 'true';
+				input = checkbox;
+			} else if (Array.isArray(value) || isListPropertyType(propertyType) || strValue.length > 60 || strValue.includes('\n')) {
+				const ta = row.createEl('textarea', { cls: 'sketchmatter-detail-input' });
+				ta.value = strValue;
+				ta.rows = 3;
+				input = ta;
+			} else {
+				const inp = row.createEl('input', { cls: 'sketchmatter-detail-input' });
+				inp.type = 'text';
+				inp.value = strValue;
+				input = inp;
+			}
+
+			editableInputs.set(key, input);
 		}
-
-		editableInputs.set(key, input);
 	}
 
 	// ── Save button ─────────────────────────────────────────────────

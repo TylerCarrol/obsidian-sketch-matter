@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Group objects with multiple types into one Objects panel entry and allow switching between their types.
+- Hide both coordinate properties, group editable properties by object part, and use a shape dropdown.
 
 ### Fixed
 
