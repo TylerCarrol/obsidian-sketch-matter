@@ -2,6 +2,7 @@ import type { TFile } from 'obsidian';
 
 export interface SketchMatterSettings {
 	panelOpenLocation: PanelOpenLocation;
+	objectEditorPropertyNames: ObjectEditorPropertyNames;
 	typeTagPrefix: string;
 	typeDefinitions: SketchMatterTypeDefinition[];
 	viewDefinitionTagPrefix: string;
@@ -64,9 +65,11 @@ export interface SketchMatterSettings {
 
 export type LayerRenderOrder = '0-1' | '1-0';
 export type PanelOpenLocation = 'center' | 'side';
+export type ObjectEditorPropertyNames = 'raw' | 'identifier';
 
 export const DEFAULT_SETTINGS: SketchMatterSettings = {
 	panelOpenLocation: 'center',
+	objectEditorPropertyNames: 'identifier',
 	typeTagPrefix: 'sketchmatter-type',
 	typeDefinitions: [
 		{

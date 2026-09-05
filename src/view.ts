@@ -435,6 +435,7 @@ private renderEditorPanel(): void {
 			this.app,
 			selectedObj,
 			this.currentFilteredObjects.filter((object) => object.sourcePath === selectedObj.sourcePath),
+			Array.from(this.metadataBundle?.imageDefinitions.keys() ?? []),
 			this.plugin.settings,
 			async (obj, changes) => {
 				await this.app.fileManager.processFrontMatter(obj.file, (fm: Record<string, unknown>) => {

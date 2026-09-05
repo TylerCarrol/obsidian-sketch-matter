@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Group objects with multiple types into one Objects panel entry and allow switching between their types.
 - Hide both coordinate properties, group editable properties by object part, and use a shape dropdown.
+- Add an image ID dropdown and improve property section heading visibility.
+- Add a General setting to show readable identifier names in the object editor.
+- Use identifier names as the default object editor property labels.
 
 ### Fixed
 

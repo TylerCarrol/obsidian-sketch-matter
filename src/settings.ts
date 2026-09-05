@@ -128,6 +128,19 @@ export class SketchMatterSettingTab extends PluginSettingTab {
 				desc: 'Core behavior and defaults for SketchMatter.',
 				items: [
 					{
+						name: 'Object editor property names',
+						desc: 'Choose whether the object editor shows raw frontmatter keys or readable property identifiers.',
+						control: {
+							type: 'dropdown',
+							key: 'objectEditorPropertyNames',
+							options: {
+								raw: 'Raw property name',
+								identifier: 'Identifier name',
+							},
+							defaultValue: DEFAULT_SETTINGS.objectEditorPropertyNames,
+						},
+					},
+					{
 						name: 'Panel open location',
 						desc: 'Choose where the open panel command and ribbon button open the SketchMatter preview.',
 						control: {

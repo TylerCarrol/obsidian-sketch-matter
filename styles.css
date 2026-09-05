@@ -410,16 +410,18 @@
 }
 
 .sketchmatter-detail-section {
-	margin-top: 14px;
+	border-top: 1px solid var(--background-modifier-border);
+	margin-top: 18px;
+	padding-top: 10px;
 }
 
 .sketchmatter-detail-section-heading {
-	border-bottom: 1px solid var(--background-modifier-border);
-	color: var(--text-muted);
-	font-size: var(--font-ui-small);
+	color: var(--text-accent);
+	font-size: var(--font-ui-medium);
 	font-weight: var(--font-semibold);
-	margin: 0 0 8px;
-	padding-bottom: 4px;
+	letter-spacing: 0;
+	margin: 0 0 10px;
+	padding-bottom: 0;
 }
 
 .sketchmatter-detail-row {
