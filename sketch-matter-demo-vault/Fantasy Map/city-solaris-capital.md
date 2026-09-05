@@ -15,7 +15,8 @@ sketchmatter-font-style:
   - bold
   - italic
 sketchmatter-font-color: "#2c2c2c"
-sketchmatter-image-id: Fantasy Map
+sketchmatter-image-id:
+  - Fantasy Map
 ---
 
 # Solaris City

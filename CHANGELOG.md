@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add an image ID dropdown and improve property section heading visibility.
 - Add a General setting to show readable identifier names in the object editor.
 - Use identifier names as the default object editor property labels.
+- Replace the object type tags text field with a multi-select control.
+- Show object type tags as removable name pills with confirmed deletion and an add-type picker.
 
 ### Fixed
 

@@ -1,4 +1,4 @@
-import { App } from 'obsidian';
+import { App, Modal } from 'obsidian';
 import { SketchMatterObject, SketchMatterSettings, RESOLVED_TEXTURE_PROPERTY } from '../types';
 import { getObsidianPropertyType } from '../property-value';
 import { getRegisteredShapeNames } from '../shapes';
@@ -9,7 +9,47 @@ import { getRegisteredShapeNames } from '../shapes';
  */
 const SKIP_PROPS = new Set(['position', RESOLVED_TEXTURE_PROPERTY]);
 
-type EditableInput = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+class ConfirmRemovalModal extends Modal {
+	private resolver: ((confirmed: boolean) => void) | null = null;
+	readonly result: Promise<boolean>;
+
+	constructor(app: App, private readonly typeName: string) {
+		super(app);
+		this.result = new Promise((resolve) => {
+			this.resolver = resolve;
+		});
+	}
+
+	onOpen(): void {
+		this.titleEl.setText('Remove object type');
+		this.contentEl.createEl('p', { text: `Remove ${this.typeName} from this object?` });
+		const actions = this.contentEl.createDiv({ cls: 'modal-button-container' });
+		const cancelButton = actions.createEl('button', { text: 'Cancel' });
+		cancelButton.addEventListener('click', () => this.resolveAndClose(false));
+		const removeButton = actions.createEl('button', { cls: 'mod-warning', text: 'Remove' });
+		removeButton.addEventListener('click', () => this.resolveAndClose(true));
+	}
+
+	onClose(): void {
+		this.contentEl.empty();
+		this.resolveAndClose(false, false);
+	}
+
+	private resolveAndClose(value: boolean, close = true): void {
+		const resolver = this.resolver;
+		this.resolver = null;
+		resolver?.(value);
+		if (close) this.close();
+	}
+}
+
+function confirmTagRemoval(app: App, typeName: string): Promise<boolean> {
+	const modal = new ConfirmRemovalModal(app, typeName);
+	modal.open();
+	return modal.result;
+}
+
+type EditableInput = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | HTMLElement;
 type EditableValue = string | number | boolean | (string | number)[];
 
 /** Returns true if the value can be represented by the detail form. */
@@ -25,9 +65,19 @@ function isListPropertyType(propertyType: string | null): boolean {
 }
 
 function inputValue(input: EditableInput): string {
-	return input instanceof HTMLInputElement && input.type === 'checkbox'
-		? String(input.checked)
-		: input.value;
+	if (input.dataset.selectedTags !== undefined) {
+		return input.dataset.selectedTags;
+	}
+	if (input instanceof HTMLInputElement && input.type === 'checkbox') {
+		return String(input.checked);
+	}
+	if (input instanceof HTMLSelectElement && input.multiple) {
+		return Array.from(input.selectedOptions, (option) => option.value).join('\n');
+	}
+	if (input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement || input instanceof HTMLSelectElement) {
+		return input.value;
+	}
+	return '';
 }
 
 function formatPropertyIdentifier(key: string, settings: SketchMatterSettings): string {
@@ -91,6 +141,11 @@ function formatPropertyIdentifier(key: string, settings: SketchMatterSettings): 
 	return readableKey.length > 0
 		? readableKey.charAt(0).toUpperCase() + readableKey.slice(1)
 		: key;
+}
+
+function formatTagName(tag: string, settings: SketchMatterSettings): string {
+	const prefix = `${settings.typeTagPrefix}/`;
+	return tag.startsWith(prefix) ? tag.slice(prefix.length) : tag;
 }
 
 function propertyGroup(
@@ -268,6 +323,9 @@ const editableInputs = new Map<string, EditableInput>();
 		...settings.typeDefinitions.map((definition) => definition.shape).filter((shape): shape is string => Boolean(shape)),
 	]);
 	const availableImageIds = new Set(imageIds);
+	const objectTypeTags = new Set(
+		settings.typeDefinitions.map((definition) => `${settings.typeTagPrefix}/${definition.name}`),
+	);
 
 	for (const group of groupOrder) {
 		const properties = groupedProperties.get(group);
@@ -307,6 +365,61 @@ const editableInputs = new Map<string, EditableInput>();
 				}
 				select.value = strValue;
 				input = select;
+			} else if (key === 'tags' || propertyType === 'tags') {
+				const currentTags = Array.isArray(value) ? value.map(String) : strValue.split(/\r?\n/u).filter(Boolean);
+				const tagOptions = new Set([...objectTypeTags, ...currentTags]);
+				const tagEditor = row.createDiv({ cls: 'sketchmatter-tag-editor' });
+				const pills = tagEditor.createDiv({ cls: 'sketchmatter-tag-pills' });
+				const addButton = tagEditor.createEl('button', {
+					cls: 'sketchmatter-tag-add',
+					text: '+',
+					attr: { type: 'button', 'aria-label': 'Add object type' },
+				});
+				const picker = tagEditor.createEl('select', {
+					cls: 'sketchmatter-tag-picker',
+				});
+				picker.hidden = true;
+				picker.createEl('option', { text: 'Add type...', value: '' });
+				addButton.addEventListener('click', () => {
+					picker.hidden = !picker.hidden;
+					if (!picker.hidden) picker.focus();
+				});
+
+				const updateTagEditor = (tags: string[]): void => {
+					tagEditor.dataset.selectedTags = tags.join('\n');
+					pills.empty();
+					for (const tag of tags) {
+						const pill = pills.createDiv({ cls: 'sketchmatter-tag-pill' });
+						pill.createSpan({ text: formatTagName(tag, settings) });
+						const removeButton = pill.createEl('button', {
+							cls: 'sketchmatter-tag-remove',
+							text: '×',
+							attr: { type: 'button', 'aria-label': `Remove ${formatTagName(tag, settings)}` },
+						});
+						removeButton.addEventListener('click', () => {
+							void confirmTagRemoval(app, formatTagName(tag, settings)).then((confirmed) => {
+								if (confirmed) updateTagEditor(tags.filter((currentTag) => currentTag !== tag));
+							});
+						});
+					}
+					for (const option of Array.from(picker.options)) {
+						option.hidden = option.value !== '' && tags.includes(option.value);
+					}
+				};
+
+				for (const tag of [...tagOptions].sort((a, b) => formatTagName(a, settings).localeCompare(formatTagName(b, settings)))) {
+					picker.createEl('option', { text: formatTagName(tag, settings), value: tag });
+				}
+				picker.addEventListener('change', () => {
+					const selectedTag = picker.value;
+					if (!selectedTag || currentTags.includes(selectedTag)) return;
+					currentTags.push(selectedTag);
+					updateTagEditor(currentTags);
+					picker.value = '';
+					picker.hidden = true;
+				});
+				updateTagEditor(currentTags);
+				input = tagEditor;
 			} else if (propertyType === 'checkbox') {
 				const checkbox = row.createEl('input', { cls: 'sketchmatter-detail-checkbox' });
 				checkbox.type = 'checkbox';
