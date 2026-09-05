@@ -479,6 +479,10 @@
 	outline: none;
 }
 
+.sketchmatter-detail-input[multiple] {
+	min-height: 84px;
+}
+
 .sketchmatter-tag-editor {
 	width: 100%;
 }

@@ -13,7 +13,7 @@ class ConfirmRemovalModal extends Modal {
 	private resolver: ((confirmed: boolean) => void) | null = null;
 	readonly result: Promise<boolean>;
 
-	constructor(app: App, private readonly typeName: string) {
+	constructor(app: App, private readonly typeName: string, private readonly itemLabel: string) {
 		super(app);
 		this.result = new Promise((resolve) => {
 			this.resolver = resolve;
@@ -21,7 +21,7 @@ class ConfirmRemovalModal extends Modal {
 	}
 
 	onOpen(): void {
-		this.titleEl.setText('Remove object type');
+		this.titleEl.setText(`Remove ${this.itemLabel}`);
 		this.contentEl.createEl('p', { text: `Remove ${this.typeName} from this object?` });
 		const actions = this.contentEl.createDiv({ cls: 'modal-button-container' });
 		const cancelButton = actions.createEl('button', { text: 'Cancel' });
@@ -43,8 +43,8 @@ class ConfirmRemovalModal extends Modal {
 	}
 }
 
-function confirmTagRemoval(app: App, typeName: string): Promise<boolean> {
-	const modal = new ConfirmRemovalModal(app, typeName);
+function confirmTagRemoval(app: App, typeName: string, itemLabel = 'object type'): Promise<boolean> {
+	const modal = new ConfirmRemovalModal(app, typeName, itemLabel);
 	modal.open();
 	return modal.result;
 }
@@ -329,6 +329,7 @@ const editableInputs = new Map<string, EditableInput>();
 	const objectTypeTags = new Set(
 		settings.typeDefinitions.map((definition) => `${settings.typeTagPrefix}/${definition.name}`),
 	);
+	const fontStyleOptions = ['bold', 'italic', 'oblique', 'underline', 'line-through', 'overline'];
 	let notifyChanged = (): void => {};
 
 	for (const group of groupOrder) {
@@ -369,6 +370,65 @@ const editableInputs = new Map<string, EditableInput>();
 				}
 				select.value = strValue;
 				input = select;
+			} else if (key === settings.fontStyleProperty) {
+				const currentStyles = Array.isArray(value)
+					? value.map(String)
+					: strValue.split(/\r?\n/u).map((style) => style.trim()).filter(Boolean);
+				const styleOptions = new Set([...fontStyleOptions, ...currentStyles]);
+				const styleEditor = row.createDiv({ cls: 'sketchmatter-tag-editor' });
+				const pills = styleEditor.createDiv({ cls: 'sketchmatter-tag-pills' });
+				const addButton = styleEditor.createEl('button', {
+					cls: 'sketchmatter-tag-add',
+					text: '+',
+					attr: { type: 'button', 'aria-label': 'Add font style' },
+				});
+				const picker = styleEditor.createEl('select', { cls: 'sketchmatter-tag-picker' });
+				picker.hidden = true;
+				picker.createEl('option', { text: 'Add style...', value: '' });
+				addButton.addEventListener('click', () => {
+					picker.hidden = !picker.hidden;
+					if (!picker.hidden) picker.focus();
+				});
+
+				const updateStyleEditor = (styles: string[]): void => {
+					styleEditor.dataset.selectedTags = styles.join('\n');
+					pills.empty();
+					for (const style of styles) {
+						const pill = pills.createDiv({ cls: 'sketchmatter-tag-pill' });
+						pill.createSpan({ text: style });
+						const removeButton = pill.createEl('button', {
+							cls: 'sketchmatter-tag-remove',
+							text: '×',
+							attr: { type: 'button', 'aria-label': `Remove ${style}` },
+						});
+						removeButton.addEventListener('click', () => {
+										void confirmTagRemoval(app, style, 'font style').then((confirmed) => {
+								if (confirmed) {
+									updateStyleEditor(styles.filter((currentStyle) => currentStyle !== style));
+									notifyChanged();
+								}
+							});
+						});
+					}
+					for (const option of Array.from(picker.options)) {
+						option.hidden = option.value !== '' && styles.includes(option.value);
+					}
+				};
+
+				for (const style of [...styleOptions].sort()) {
+					picker.createEl('option', { text: style, value: style });
+				}
+				picker.addEventListener('change', () => {
+					const selectedStyle = picker.value;
+					if (!selectedStyle || currentStyles.includes(selectedStyle)) return;
+					currentStyles.push(selectedStyle);
+					updateStyleEditor(currentStyles);
+					notifyChanged();
+					picker.value = '';
+					picker.hidden = true;
+				});
+				updateStyleEditor(currentStyles);
+				input = styleEditor;
 			} else if (key === 'tags' || propertyType === 'tags') {
 				const currentTags = Array.isArray(value) ? value.map(String) : strValue.split(/\r?\n/u).filter(Boolean);
 				const tagOptions = new Set([...objectTypeTags, ...currentTags]);
