@@ -187,6 +187,7 @@ export type SnapMode = 'all-points' | 'same-type' | 'disabled';
 
 export interface EditorOverlayOptions {
 	snapMode?: SnapMode;
+	allowWholeObjectDragging?: boolean;
 }
 
 /** Remove any previously attached editor overlay from the SVG. */
@@ -216,6 +217,7 @@ export function attachEditorOverlay(
 ): EditorOverlayHandle {
 	detachEditorOverlay(svg);
 	const snapMode = options.snapMode ?? 'disabled';
+	const allowWholeObjectDragging = options.allowWholeObjectDragging ?? true;
 
 	const overlay = createSvgEl('g');
 	overlay.setAttribute('class', OVERLAY_CLASS);
@@ -625,7 +627,7 @@ export function attachEditorOverlay(
 		let dragStartPoints: [number, number][] | null = null;
 
 		entry.hitTarget.addEventListener('pointerdown', (e: PointerEvent) => {
-			if (selectedEntry !== entry || entry.isOpen || e.button !== 0) return;
+			if (!allowWholeObjectDragging || selectedEntry !== entry || entry.isOpen || e.button !== 0) return;
 			e.stopPropagation();
 			e.preventDefault();
 			dragPointerId = e.pointerId;

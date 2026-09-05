@@ -114,6 +114,35 @@ describe('attachEditorOverlay', () => {
 		expect(movedPoints[0]?.[1]).toBeCloseTo(20, 4);
 	});
 
+	it('does not drag an entire object when whole-object dragging is disabled', () => {
+		const svg = makeSvg();
+		document.body.appendChild(svg);
+
+		const object = makeObject('path-no-object-drag', ['50, 20', '150, 20']);
+		const onCoordinatesChanged = vi.fn();
+
+		attachEditorOverlay(
+			svg,
+			[object],
+			new Map(),
+			DEFAULT_SETTINGS,
+			() => { /* noop */ },
+			onCoordinatesChanged,
+			{ allowWholeObjectDragging: false },
+		);
+
+		const hitTarget = svg.querySelector('.sketchmatter-hit-target');
+		expect(hitTarget).not.toBeNull();
+		hitTarget!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+		const [startX, startY] = userToClient([50, 20]);
+		hitTarget!.dispatchEvent(pointerEvent('pointerdown', startX, startY));
+		hitTarget!.dispatchEvent(pointerEvent('pointermove', startX + 30, startY + 10));
+		hitTarget!.dispatchEvent(pointerEvent('pointerup', startX + 30, startY + 10));
+
+		expect(onCoordinatesChanged).not.toHaveBeenCalled();
+	});
+
 	it('accepts edge insertion within 10 screen pixels under letterboxing', () => {
 		const svg = makeSvg();
 		document.body.appendChild(svg);

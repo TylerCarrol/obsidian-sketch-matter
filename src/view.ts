@@ -54,6 +54,7 @@ currentImageId: string | null = null;
 showGrid = false;
 editMode = false;
 snapMode: SnapMode = 'disabled';
+draggingEnabled = false;
 zoomLevel = 1;
 selectedObjectPath: string | null = null;
 private editorSidebarEl: HTMLElement | null = null;
@@ -262,6 +263,23 @@ snapModeSelector.addEventListener('change', () => {
 	void this.renderView();
 });
 
+const objectDraggingLabel = controls.createEl('label', { cls: 'sketchmatter-control-label' });
+objectDraggingLabel.createSpan({ text: 'Object dragging' });
+const objectDraggingSelector = objectDraggingLabel.createEl('select', { cls: 'sketchmatter-dragging-selector' });
+const objectDraggingOptions: Array<{ value: boolean; label: string }> = [
+	{ value: true, label: 'Enabled' },
+	{ value: false, label: 'Disabled' },
+];
+for (const optionDefinition of objectDraggingOptions) {
+	const option = objectDraggingSelector.createEl('option', { text: optionDefinition.label });
+	option.value = String(optionDefinition.value);
+	option.selected = optionDefinition.value === this.draggingEnabled;
+}
+objectDraggingSelector.addEventListener('change', () => {
+	this.draggingEnabled = objectDraggingSelector.value === 'true';
+	void this.renderView();
+});
+
 const createActions = controls.createDiv({ cls: 'sketchmatter-create-actions' });
 const createImageButton = this.createPreviewButton(createActions, {
 	label: 'Create image',
@@ -360,7 +378,10 @@ if (this.editMode && this.previewContainer) {
 			this.plugin.settings,
 			(obj) => { this.onObjectSelected(obj); },
 			(obj, pts) => { this.onCoordinatesChanged(obj, pts); },
-			{ snapMode: this.snapMode },
+			{
+				snapMode: this.snapMode,
+				allowWholeObjectDragging: this.draggingEnabled,
+			},
 		);
 		// Restore previous selection after a re-render
 		if (this.selectedObjectPath) {
