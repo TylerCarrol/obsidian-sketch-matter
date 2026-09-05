@@ -282,12 +282,13 @@ export function renderObjectDetail(
 
 	// ── Type selector ───────────────────────────────────────────────
 	const typeRow = container.createDiv({ cls: 'sketchmatter-detail-type' });
-	typeRow.createSpan({ text: 'Type: ' });
+	typeRow.createSpan({ text: 'Select object: ' });
 	const relatedTypes = relatedObjects.length > 0 ? relatedObjects : [object];
 	for (const relatedObject of relatedTypes) {
 		const typeButton = typeRow.createEl('button', {
 			cls: 'sketchmatter-detail-type-button',
 			text: relatedObject.typeName,
+			attr: { title: `Select ${relatedObject.typeName} on the map` },
 		});
 		typeButton.classList.toggle('is-active', relatedObject.objectId === object.objectId);
 		typeButton.addEventListener('click', () => {

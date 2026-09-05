@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replace the object type tags text field with a multi-select control.
 - Show object type tags as removable name pills with confirmed deletion and an add-type picker.
 - Add optional automatic saving for object editor changes with an unsaved status for manual mode.
+- Clarify the object type selector label and add selection tooltips.
 
 ### Fixed
 
