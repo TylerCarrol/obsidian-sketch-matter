@@ -171,6 +171,27 @@ describe('renderSvgToString — exported backgrounds', () => {
 	});
 });
 
+describe('renderSvgToString — outward blending', () => {
+	it('adds an expanded halo for blended objects', () => {
+		const object = makeObject(
+			'blended-biome',
+			'biome',
+			['0, 0', '100, 0', '100, 100', '0, 100'],
+			{
+				[DEFAULT_SETTINGS.fillProperty]: '#cc8844',
+				[DEFAULT_SETTINGS.blendProperty]: true,
+				[DEFAULT_SETTINGS.blendOverflowProperty]: 18,
+			},
+		);
+
+		const svgContent = renderSvgToString([object], undefined, '0-1', DEFAULT_SETTINGS, null);
+
+		expect(svgContent).toContain('sketchmatter-blend-halo');
+		expect(svgContent).toContain('stroke-width="36"');
+		expect(svgContent).toContain('stroke="none"');
+	});
+});
+
 describe('renderSvgToString — configurable object shape and children keys', () => {
 	it('uses configured object shape key for shape overrides', () => {
 		const settings = {

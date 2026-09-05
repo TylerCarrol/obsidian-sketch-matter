@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added a preview control to enable or disable dragging entire objects in edit mode, disabled by default.
+- Added outward biome blending with configurable blend overflow distance for adjacent shapes.
 
 ### Fixed
 

@@ -161,6 +161,7 @@ The table below maps every `SketchMatterSettings` field to its default value. Wh
 | `noiseAmountProperty` | `sketchmatter-noise` | Frontmatter key for noise roughness |
 | `blendProperty` | `sketchmatter-blend` | Frontmatter key for soft-edge blend toggle |
 | `blendRadiusProperty` | `sketchmatter-blend-radius` | Frontmatter key for blend feather radius (SVG units, default 20) |
+| `blendOverflowProperty` | `sketchmatter-blend-overflow` | Frontmatter key for outward blend distance (SVG units, default 20) |
 | `overlapPatternProperty` | `sketchmatter-overlap-pattern` | Frontmatter key for overlap-only pattern type (`lines`, `hatch`, `crosshatch`, `dots`) |
 | `overlapPatternThicknessProperty` | `sketchmatter-overlap-thickness` | Frontmatter key for overlap pattern stroke thickness |
 | `overlapPatternSpacingProperty` | `sketchmatter-overlap-spacing` | Frontmatter key for overlap pattern spacing |

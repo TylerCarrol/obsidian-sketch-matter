@@ -18,6 +18,7 @@ sketchmatter-stroke-width: 0
 sketchmatter-opacity: 0.45
 sketchmatter-mask: type:continent
 sketchmatter-blend: true
+sketchmatter-blend-overflow: 24
 sketchmatter-magnitude: 10
 sketchmatter-noise: 1.8
 sketchmatter-seed: my-highland

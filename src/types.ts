@@ -44,6 +44,7 @@ export interface SketchMatterSettings {
 	noiseAmountProperty: string;
 	blendProperty: string;
 	blendRadiusProperty: string;
+	blendOverflowProperty: string;
 	overlapPatternProperty: string;
 	overlapPatternThicknessProperty: string;
 	overlapPatternSpacingProperty: string;
@@ -295,6 +296,7 @@ export const DEFAULT_SETTINGS: SketchMatterSettings = {
 	noiseAmountProperty: 'sketchmatter-noise',
 	blendProperty: 'sketchmatter-blend',
 	blendRadiusProperty: 'sketchmatter-blend-radius',
+	blendOverflowProperty: 'sketchmatter-blend-overflow',
 	overlapPatternProperty: 'sketchmatter-overlap-pattern',
 	overlapPatternThicknessProperty: 'sketchmatter-overlap-thickness',
 	overlapPatternSpacingProperty: 'sketchmatter-overlap-spacing',

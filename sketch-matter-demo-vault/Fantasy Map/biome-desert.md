@@ -7,7 +7,7 @@ sketchmatter-coordinates:
   - 915, 324
   - 1041, 493
   - 940, 611
-  - 620, 697
+  - 542, 630
 sketchmatter-image-id: Fantasy Map
 sketchmatter-fill: "#e8c87a"
 sketchmatter-stroke: "#b89040"
@@ -15,6 +15,7 @@ sketchmatter-stroke-width: 1
 sketchmatter-opacity: 0.55
 sketchmatter-mask: type:continent
 sketchmatter-blend: true
+sketchmatter-blend-overflow: 24
 sketchmatter-magnitude: 20
 sketchmatter-noise: 1.6
 sketchmatter-seed: my-desert

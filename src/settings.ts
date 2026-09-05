@@ -366,6 +366,11 @@ export class SketchMatterSettingTab extends PluginSettingTab {
 								'blendRadiusProperty',
 							),
 							this.textSetting(
+								'Blend overflow',
+								'Frontmatter key for the distance that blended color extends beyond the object border (default 20).',
+								'blendOverflowProperty',
+							),
+							this.textSetting(
 								'Overlap pattern',
 								'Frontmatter key for overlap-only pattern style. Supported values: lines, hatch, crosshatch, dots.',
 								'overlapPatternProperty',

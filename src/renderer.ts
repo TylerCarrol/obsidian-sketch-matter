@@ -594,6 +594,46 @@ function ensureBlendFilterId(
 	return filterId;
 }
 
+function createBlendHalo(
+	element: SVGElement,
+	overflow: number,
+	state: RenderSupportState,
+): SVGElement | null {
+	const haloNode = element.cloneNode(true);
+	if (haloNode.nodeType !== Node.ELEMENT_NODE) {
+		return null;
+	}
+	const halo = haloNode as SVGElement;
+
+	const fill = halo.getAttribute('fill');
+	if (!fill || fill === 'none' || fill === 'transparent') {
+		return null;
+	}
+
+	const haloFilterId = nextSvgId('sketchmatter-blend-halo');
+	const filter = createSvgElement('filter');
+	filter.setAttribute('id', haloFilterId);
+	filter.setAttribute('x', '-100%');
+	filter.setAttribute('y', '-100%');
+	filter.setAttribute('width', '300%');
+	filter.setAttribute('height', '300%');
+	filter.setAttribute('color-interpolation-filters', 'sRGB');
+	const blur = createSvgElement('feGaussianBlur');
+	blur.setAttribute('stdDeviation', String(Math.max(overflow * 0.35, 0.5)));
+	filter.appendChild(blur);
+	state.defs.appendChild(filter);
+
+	halo.removeAttribute('filter');
+	halo.removeAttribute(RENDERED_OBJECT_ID_ATTR);
+	halo.setAttribute('filter', `url(#${haloFilterId})`);
+	halo.setAttribute('stroke', fill);
+	halo.setAttribute('stroke-width', String(overflow * 2));
+	halo.setAttribute('stroke-linejoin', 'round');
+	halo.setAttribute('stroke-linecap', 'round');
+	halo.setAttribute('pointer-events', 'none');
+	return halo;
+}
+
 function applyPostRenderAttributes(
 	element: SVGElement,
 	object: SketchMatterObject,
@@ -623,6 +663,10 @@ function applyPostRenderAttributes(
 		const radius = parsePositiveNumber(radiusRaw, 20);
 		const filterId = ensureBlendFilterId(radius, state);
 		element.setAttribute('filter', `url(#${filterId})`);
+		const fill = element.getAttribute('fill');
+		if (fill && fill !== 'none' && fill !== 'transparent') {
+			element.setAttribute('stroke', 'none');
+		}
 	}
 }
 
@@ -727,6 +771,19 @@ function renderObject(
 		if (child instanceof SVGElement) {
 			child.setAttribute(RENDERED_OBJECT_ID_ATTR, object.objectId);
 			applyPostRenderAttributes(child, object, settings, state);
+			const blendRaw = object.properties[settings.blendProperty];
+			const blendEnabled =
+				blendRaw === true ||
+				blendRaw === 'true' ||
+				blendRaw === 1 ||
+				blendRaw === '1';
+			if (blendEnabled) {
+				const overflow = parsePositiveNumber(object.properties[settings.blendOverflowProperty], 20);
+				const halo = createBlendHalo(child, overflow, state);
+				if (halo) {
+					child.parentElement?.insertBefore(halo, child);
+				}
+			}
 			appendOverlapPatternOverlay(svg, child, object, settings, state);
 		}
 	}

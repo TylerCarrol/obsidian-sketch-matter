@@ -14,6 +14,7 @@ sketchmatter-stroke-width: 1
 sketchmatter-opacity: 0.55
 sketchmatter-mask: type:continent
 sketchmatter-blend: true
+sketchmatter-blend-overflow: 24
 sketchmatter-magnitude: 10
 sketchmatter-noise: 1.6
 sketchmatter-seed: my-woodland
