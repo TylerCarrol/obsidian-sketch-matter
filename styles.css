@@ -137,6 +137,16 @@
 	border-left: 1px solid var(--background-modifier-border);
 }
 
+/* Keep the status line outside the scrollable preview and editor layout. */
+.sketchmatter-view-status {
+	flex: 0 0 auto;
+	min-height: 1.5em;
+	padding: 4px 8px;
+	box-sizing: border-box;
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+}
+
 /* ── Zoom controls ───────────────────────────────────────────────── */
 
 .sketchmatter-zoom-controls {
@@ -266,7 +276,7 @@
 	height: 100%;
 	border-left: 1px solid var(--background-modifier-border);
 	overflow-y: auto;
-	padding: 12px;
+	padding: 12px 12px 36px;
 	background: var(--background-secondary);
 	box-sizing: border-box;
 }
