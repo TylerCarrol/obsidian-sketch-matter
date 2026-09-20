@@ -26,7 +26,7 @@
 
 - View image preview
 - Edit by drag-and-drop
-- Toggle a customizable grid
+- Choose no grid, a customizable grid, or a hex grid
 - Zoom and pan
 
 ### Export

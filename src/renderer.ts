@@ -5,6 +5,7 @@ import {
 	SketchMatterObject,
 	SketchMatterSettings,
 	SketchMatterTypeDefinition,
+	GridType,
 	RESOLVED_TEXTURE_PROPERTY,
 } from './types';
 import {
@@ -989,6 +990,44 @@ function renderGrid(svg: SVGSVGElement, width: number, height: number, spacing: 
 	svg.appendChild(group);
 }
 
+/**
+ * Render a flat-top hex-tile overlay into the SVG.
+ * `spacing` is the distance between the left and right vertices of each tile.
+ */
+function renderHexGrid(svg: SVGSVGElement, width: number, height: number, spacing: number): void {
+	const group = createSvgElement('g');
+	group.setAttribute('class', 'sketchmatter-grid');
+
+	const lineColor = '#888888';
+	const radius = spacing / 2;
+	const tileHeight = Math.sqrt(3) * radius;
+	const columnStep = radius * 1.5;
+
+	for (let column = -1, centerX = -columnStep; centerX <= width + columnStep; column++, centerX += columnStep) {
+		const columnOffset = column % 2 === 0 ? 0 : tileHeight / 2;
+		for (let centerY = -tileHeight; centerY <= height + tileHeight; centerY += tileHeight) {
+			const tileCenterY = centerY + columnOffset;
+			const points = [
+				[centerX + radius, tileCenterY],
+				[centerX + radius / 2, tileCenterY + tileHeight / 2],
+				[centerX - radius / 2, tileCenterY + tileHeight / 2],
+				[centerX - radius, tileCenterY],
+				[centerX - radius / 2, tileCenterY - tileHeight / 2],
+				[centerX + radius / 2, tileCenterY - tileHeight / 2],
+			];
+			const polygon = createSvgElement('polygon');
+			polygon.setAttribute('points', points.map(([pointX, pointY]) => `${pointX},${pointY}`).join(' '));
+			polygon.setAttribute('fill', 'none');
+			polygon.setAttribute('stroke', lineColor);
+			polygon.setAttribute('stroke-width', '0.5');
+			polygon.setAttribute('opacity', '0.5');
+			group.appendChild(polygon);
+		}
+	}
+
+	svg.appendChild(group);
+}
+
 export function renderSvgPreview(
 	container: HTMLElement,
 	objects: SketchMatterObject[],
@@ -996,7 +1035,7 @@ export function renderSvgPreview(
 	renderOrder: LayerRenderOrder = '0-1',
 	settings: SketchMatterSettings = DEFAULT_SETTINGS,
 	imageDefinition: SketchMatterImageDefinition | null = null,
-	showGrid = false,
+	gridType: GridType | boolean = 'none',
 ): void {
 	container.innerHTML = '';
 	const svg = createRootSvg(imageDefinition);
@@ -1004,11 +1043,18 @@ export function renderSvgPreview(
 	const typeDefs = typeDefinitions ?? new Map<string, SketchMatterTypeDefinition>();
 	renderToSvg(svg, objects, typeDefs, renderOrder, settings);
 
-	if (showGrid) {
+	const resolvedGridType: GridType = typeof gridType === 'boolean'
+		? (gridType ? 'grid' : 'none')
+		: gridType;
+	if (resolvedGridType !== 'none') {
 		const width = imageDefinition?.width ?? 1200;
 		const height = imageDefinition?.height ?? 900;
 		const spacing = settings.gridSpacing > 0 ? settings.gridSpacing : 100;
-		renderGrid(svg, width, height, spacing);
+		if (resolvedGridType === 'hex-grid') {
+			renderHexGrid(svg, width, height, spacing);
+		} else {
+			renderGrid(svg, width, height, spacing);
+		}
 	}
 
 	container.appendChild(svg);

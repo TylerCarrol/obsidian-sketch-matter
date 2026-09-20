@@ -125,6 +125,18 @@ describe('renderSvgPreview — globally unique SVG IDs', () => {
 	});
 });
 
+describe('renderSvgPreview — grid types', () => {
+	it('renders a hexagonal overlay for the hex-grid mode', () => {
+		const container = document.createElement('div');
+
+		renderSvgPreview(container, [], undefined, '0-1', DEFAULT_SETTINGS, null, 'hex-grid');
+
+		const hexagons = container.querySelectorAll('.sketchmatter-grid polygon');
+		expect(hexagons.length).toBeGreaterThan(0);
+		expect(hexagons[0]?.getAttribute('points')?.split(' ')).toHaveLength(6);
+	});
+});
+
 describe('renderSvgToString — exported backgrounds', () => {
 	it('omits background rect when backgroundColor is not set (transparent by default)', () => {
 		const svgContent = renderSvgToString(

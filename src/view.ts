@@ -1,5 +1,11 @@
 import { ItemView, Notice, Plugin, WorkspaceLeaf, setIcon } from 'obsidian';
-import { DEFAULT_SETTINGS, SketchMatterObject, SketchMatterSettings, SketchMatterViewDefinition } from './types';
+import {
+	DEFAULT_SETTINGS,
+	GridType,
+	SketchMatterObject,
+	SketchMatterSettings,
+	SketchMatterViewDefinition,
+} from './types';
 import {
 	createImageDefinitionFlow,
 	createObjectDefinitionFlow,
@@ -51,7 +57,7 @@ previewContainer: HTMLElement | null = null;
 statusElement: HTMLElement | null = null;
 currentViewId: string | null = null;
 currentImageId: string | null = null;
-showGrid = false;
+gridType: GridType = 'none';
 editMode = false;
 snapMode: SnapMode = 'disabled';
 draggingEnabled = false;
@@ -153,37 +159,6 @@ refreshButton.addEventListener('click', () => {
 	void this.reload();
 });
 
-const gridButton = this.createPreviewButton(buttonPanel, {
-	label: 'Grid',
-	icon: 'layout-grid',
-	className: this.showGrid
-		? 'sketchmatter-grid-button sketchmatter-grid-button-active'
-		: 'sketchmatter-grid-button',
-});
-gridButton.addEventListener('click', () => {
-this.showGrid = !this.showGrid;
-void this.renderView();
-});
-
-if (this.showGrid) {
-	const spacingLabel = buttonPanel.createEl('label', {
-		cls: 'sketchmatter-control-label sketchmatter-grid-spacing-control',
-	});
-	spacingLabel.createSpan({ text: 'Spacing' });
-	const spacingInput = spacingLabel.createEl('input', { cls: 'sketchmatter-spacing-input' });
-	spacingInput.type = 'text';
-	spacingInput.value = String(this.plugin.settings.gridSpacing);
-	spacingInput.addEventListener('change', () => {
-		void (async () => {
-			const parsed = Number(spacingInput.value);
-			this.plugin.settings.gridSpacing =
-				Number.isNaN(parsed) || parsed <= 0 ? DEFAULT_SETTINGS.gridSpacing : parsed;
-			await this.plugin.saveData(this.plugin.settings);
-			void this.renderView();
-		})();
-	});
-}
-
 const editButton = this.createPreviewButton(buttonPanel, {
 	label: 'Edit',
 	icon: 'pencil',
@@ -244,6 +219,63 @@ this.selector.addEventListener('change', () => {
 this.currentViewId = this.selector?.value || null;
 void this.renderView();
 });
+
+const gridLabel = controls.createEl('label', { cls: 'sketchmatter-control-label' });
+gridLabel.createSpan({ text: 'Grid' });
+const gridSelector = gridLabel.createEl('select', { cls: 'sketchmatter-grid-selector' });
+const gridOptions: Array<{ value: GridType; label: string }> = [
+	{ value: 'none', label: 'None' },
+	{ value: 'grid', label: 'Grid' },
+	{ value: 'hex-grid', label: 'Hex tiles' },
+];
+for (const optionDefinition of gridOptions) {
+	const option = gridSelector.createEl('option', { text: optionDefinition.label });
+	option.value = optionDefinition.value;
+	option.selected = optionDefinition.value === this.gridType;
+}
+gridSelector.addEventListener('change', () => {
+	this.gridType = gridSelector.value as GridType;
+	void this.renderView();
+});
+
+if (this.gridType !== 'none') {
+	const spacingLabel = controls.createEl('label', {
+		cls: 'sketchmatter-control-label sketchmatter-grid-spacing-control',
+	});
+	spacingLabel.createSpan({ text: 'Spacing' });
+	const spacingControls = spacingLabel.createDiv({ cls: 'sketchmatter-spacing-controls' });
+	const spacingInput = spacingControls.createEl('input', { cls: 'sketchmatter-spacing-input' });
+	spacingInput.type = 'number';
+	spacingInput.step = '10';
+	spacingInput.min = '1';
+	spacingInput.value = String(this.plugin.settings.gridSpacing);
+	const changeSpacing = (delta: number): void => {
+		const currentValue = Number(spacingInput.value);
+		spacingInput.value = String(Math.max(1, (Number.isFinite(currentValue) ? currentValue : DEFAULT_SETTINGS.gridSpacing) + delta));
+		spacingInput.dispatchEvent(new Event('change'));
+	};
+	const decreaseSpacingButton = this.createPreviewButton(spacingControls, {
+		label: 'Decrease spacing',
+		icon: 'chevron-down',
+		className: 'sketchmatter-spacing-step-button sketchmatter-spacing-decrease-button',
+	});
+	decreaseSpacingButton.addEventListener('click', () => changeSpacing(-10));
+	const increaseSpacingButton = this.createPreviewButton(spacingControls, {
+		label: 'Increase spacing',
+		icon: 'chevron-up',
+		className: 'sketchmatter-spacing-step-button sketchmatter-spacing-increase-button',
+	});
+	increaseSpacingButton.addEventListener('click', () => changeSpacing(10));
+	spacingInput.addEventListener('change', () => {
+		void (async () => {
+			const parsed = Number(spacingInput.value);
+			this.plugin.settings.gridSpacing =
+				Number.isNaN(parsed) || parsed <= 0 ? DEFAULT_SETTINGS.gridSpacing : parsed;
+			await this.plugin.saveData(this.plugin.settings);
+			void this.renderView();
+		})();
+	});
+}
 
 const snapModeLabel = controls.createEl('label', { cls: 'sketchmatter-control-label' });
 snapModeLabel.createSpan({ text: 'Snap mode' });
@@ -361,7 +393,7 @@ if (this.previewContainer) {
 		this.plugin.settings.layerRenderOrder,
 		this.plugin.settings,
 		imageDefinition,
-		this.showGrid,
+		this.gridType,
 	);
 	this.applyPreviewZoom();
 	this.restorePreviewViewportState(previousViewport);

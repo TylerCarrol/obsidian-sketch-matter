@@ -67,6 +67,7 @@ export interface SketchMatterSettings {
 export type LayerRenderOrder = '0-1' | '1-0';
 export type PanelOpenLocation = 'center' | 'side';
 export type ObjectEditorPropertyNames = 'raw' | 'identifier';
+export type GridType = 'none' | 'grid' | 'hex-grid';
 
 export const DEFAULT_SETTINGS: SketchMatterSettings = {
 	panelOpenLocation: 'center',

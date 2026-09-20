@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Place the preview panel's grid selector between View and Snap mode, with options for no grid, a coordinate grid, or non-overlapping hex tiles.
+- Add native increment and decrement controls to the grid spacing input in steps of 10.
+- Show dedicated spacing increment and decrement arrow buttons in the preview panel.
+
 ## [0.9.0] - 2026-09-05
 
 ### Added
