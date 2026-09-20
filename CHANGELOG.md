@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-09-20
+
 ### Changed
 
 - Place the preview panel's grid selector between View and Snap mode, with options for no grid, a coordinate grid, or non-overlapping hex tiles.
@@ -161,7 +163,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Demo vault, including a Logo demo and sample maps.
 - Automated test coverage for metadata parsing, rendering, shapes, and noise helpers.
 
-[Unreleased]: https://github.com/TylerCarrol/obsidian-sketch-matter/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/TylerCarrol/obsidian-sketch-matter/compare/v0.10.0...HEAD
+
+[0.10.0]: https://github.com/TylerCarrol/obsidian-sketch-matter/compare/v0.9.0...v0.10.0
 
 [0.9.0]: https://github.com/TylerCarrol/obsidian-sketch-matter/compare/v0.8.2...v0.9.0
 
