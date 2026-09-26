@@ -204,6 +204,26 @@ describe('collectAllImageIds', () => {
 			'World Map',
 		]);
 	});
+
+	it('reads image projection through its configurable property name', () => {
+		const settings = {
+			...DEFAULT_SETTINGS,
+			imageProjectionProperty: 'custom-projection',
+		};
+		const files = [makeFile('earth.md')];
+		const metadata = new Map([
+			['earth.md', {
+				frontmatter: {
+					[settings.imageIdProperty]: 'Earth',
+					'custom-projection': 'Mercator',
+				},
+				tags: [{ tag: `#${settings.imageDefinitionTagPrefix}` }],
+			}],
+		]);
+
+		const definitions = collectSketchMatterImageDefinitions(new App(files, metadata), settings);
+		expect(definitions.get('Earth')?.projection).toBe('mercator');
+	});
 });
 
 // ---------------------------------------------------------------------------

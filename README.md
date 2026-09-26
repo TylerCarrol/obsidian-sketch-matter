@@ -19,6 +19,7 @@
 ![](./sketch-matter-demo-vault/sketch-matter-export-political-fantasy_map.svg)
 ![](./sketch-matter-demo-vault/sketch-matter-export-geography-earth.svg)
 ![](./sketch-matter-demo-vault/sketch-matter-export-political-earth.svg)
+![](./sketch-matter-demo-vault/sketch-matter-earth-globe.png)
 
 ## Features
 
@@ -28,6 +29,12 @@
 - Edit by drag-and-drop
 - Choose no grid, a customizable grid, or a hex grid
 - Zoom and pan
+
+##### 3D Globe
+
+- Switch between the 2D map and an interactive 3D globe
+- Select from a variety of map projection modes
+- Rotate the globe by dragging and zoom with the mouse wheel or a pinch gesture
 
 ### Export
 
@@ -157,6 +164,7 @@ Supported frontmatter:
 - `sketchmatter-background-color`
 - `sketchmatter-background-image`
 - `sketchmatter-preserve-aspect-ratio`
+- `sketchmatter-projection` (see the supported projections below)
 
 `sketchmatter-background-image` accepts vault assets, wikilinks, absolute URLs, and data URLs.
 
@@ -173,8 +181,35 @@ Supported parameters:
 
 - `image`
 - `view`
+- `mode` (`2d` or `globe`)
+- `projection` (see the supported projections below)
 
 Both are optional. The `view` value is case-insensitive. If an image is omitted, SketchMatter will try to resolve one from the selected view or the filtered objects.
+
+Use an interactive globe in a note with:
+
+```sketchmatter
+image: Earth
+view: political
+mode: globe
+projection: equirectangular
+```
+
+Projection describes the layout of the completed source map. It does not change existing object coordinates or reproject the 2D SVG. A code-block or panel override takes precedence over the image definition, which takes precedence over the plugin default.
+
+Supported source projections:
+
+- `equirectangular` — direct longitude and latitude mapping
+- `mercator` — Web Mercator, with polar caps clamped at approximately ±85.0511°
+- `miller` — Miller cylindrical compromise projection
+- `gall-peters` — Gall–Peters equal-area cylindrical projection
+- `mollweide` — Mollweide equal-area elliptical projection
+- `robinson` — Robinson compromise projection
+- `winkel-tripel` — Winkel Tripel compromise projection
+
+For the five extended projections, SketchMatter assumes the complete world projection is centered and proportionally fitted to the full image canvas. Select the projection in which the source map was authored; selecting a different projection does not convert the underlying note coordinates. Winkel Tripel uses a 2048×1024 texture limit to keep interactive preview generation responsive.
+
+Globe previews require WebGL. If WebGL or a texture asset is unavailable, SketchMatter displays the existing 2D preview with an error message. Remote image assets remain subject to the source server's CORS policy. Editing and SVG export continue to use the 2D map.
 
 ## Styling and advanced rendering
 

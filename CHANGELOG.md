@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add interactive Three.js globe previews to the panel and `sketch-matter` code blocks, with drag rotation and wheel or pinch zoom.
+- Add equirectangular, Mercator, Miller cylindrical, Gall–Peters, Mollweide, Robinson, and Winkel Tripel source projection support through configurable image metadata and preview overrides.
+
 ## [0.10.0] - 2026-09-20
 
 ### Changed

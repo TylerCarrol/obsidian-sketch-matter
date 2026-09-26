@@ -6,7 +6,15 @@ sketchmatter-width: 4400
 sketchmatter-height: 2200
 sketchmatter-background-color: "#acd8ee"
 sketchmatter-preserve-aspect-ratio: xMidYMid meet
+sketchmatter-projection: robinson
 ---
+
+## Globe
+```sketch-matter
+image: Earth
+mode: globe
+projection: robinson
+```
 
 # Earth
 

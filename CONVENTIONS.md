@@ -150,6 +150,7 @@ The table below maps every `SketchMatterSettings` field to its default value. Wh
 | `imageBackgroundColorProperty` | `sketchmatter-background-color` | Frontmatter key for canvas background color |
 | `imageBackgroundImageProperty` | `sketchmatter-background-image` | Frontmatter key for canvas background image |
 | `imagePreserveAspectRatioProperty` | `sketchmatter-preserve-aspect-ratio` | Frontmatter key for SVG `preserveAspectRatio` |
+| `imageProjectionProperty` | `sketchmatter-projection` | Frontmatter key for a supported globe source projection |
 | `transparencyProperty` | `sketchmatter-opacity` | Frontmatter key for object opacity |
 | `fillProperty` | `sketchmatter-fill` | Frontmatter key for object fill value |
 | `strokeProperty` | `sketchmatter-stroke` | Frontmatter key for object stroke value |

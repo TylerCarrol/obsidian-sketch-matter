@@ -1,7 +1,8 @@
 import { App, Modal, Notice, Plugin, TFile } from 'obsidian';
 import { getRegisteredShapeNames } from './shapes';
-import { SketchMatterSettings } from './types';
+import { MapProjection, SketchMatterSettings } from './types';
 import { collectSketchMatterImageDefinitions } from './metadata';
+import { MAP_PROJECTIONS } from './globe/projection';
 
 type RefreshCallback = (() => Promise<void> | void) | undefined;
 
@@ -14,6 +15,7 @@ interface ImagePromptValues {
 	name: string;
 	width: number;
 	height: number;
+	projection: MapProjection;
 }
 
 interface ViewPromptValues {
@@ -60,6 +62,13 @@ class CreateImageModal extends BasePromptModal<ImagePromptValues> {
 	private nameInput!: HTMLInputElement;
 	private widthInput!: HTMLInputElement;
 	private heightInput!: HTMLInputElement;
+	private projectionSelect!: HTMLSelectElement;
+	private readonly defaultProjection: MapProjection;
+
+	constructor(app: App, defaultProjection: MapProjection) {
+		super(app);
+		this.defaultProjection = defaultProjection;
+	}
 
 	onOpen(): void {
 		this.titleEl.setText('Create image');
@@ -73,6 +82,14 @@ class CreateImageModal extends BasePromptModal<ImagePromptValues> {
 		this.nameInput = createLabeledInput(form, 'Name', 'text', 'Earth');
 		this.widthInput = createLabeledInput(form, 'Width', 'number', '2000');
 		this.heightInput = createLabeledInput(form, 'Height', 'number', '1200');
+		const projectionField = form.createEl('label', { cls: 'sketchmatter-create-field' });
+		projectionField.createSpan({ text: 'Projection' });
+		this.projectionSelect = projectionField.createEl('select');
+		for (const { id: value, label } of MAP_PROJECTIONS) {
+			const option = this.projectionSelect.createEl('option', { text: label });
+			option.value = value;
+			option.selected = value === this.defaultProjection;
+		}
 
 		const buttonRow = form.createDiv({ cls: 'sketchmatter-create-form-actions' });
 		const cancelButton = buttonRow.createEl('button', { text: 'Cancel' });
@@ -101,7 +118,12 @@ class CreateImageModal extends BasePromptModal<ImagePromptValues> {
 			return;
 		}
 
-		this.resolveAndClose({ name, width, height });
+		this.resolveAndClose({
+			name,
+			width,
+			height,
+			projection: this.projectionSelect.value as MapProjection,
+		});
 	}
 }
 
@@ -396,7 +418,7 @@ export async function createImageDefinitionFlow(
 	settings: SketchMatterSettings,
 	refreshAfterCreate?: () => Promise<void> | void,
 ): Promise<void> {
-	const modal = new CreateImageModal(app);
+	const modal = new CreateImageModal(app, settings.defaultGlobeProjection);
 	modal.open();
 	const values = await modal.result;
 	if (!values) {
@@ -415,6 +437,7 @@ export async function createImageDefinitionFlow(
 		`${settings.imageIdProperty}: ${quoteYaml(imageId)}`,
 		`${settings.imageWidthProperty}: ${values.width}`,
 		`${settings.imageHeightProperty}: ${values.height}`,
+		`${settings.imageProjectionProperty}: ${values.projection}`,
 		'---',
 		'',
 		`# ${values.name}`,

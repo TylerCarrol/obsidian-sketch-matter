@@ -63,6 +63,14 @@ export function getAllTags(cache: CachedMetadata): string[] {
 	return (cache.tags ?? []).map((t) => t.tag);
 }
 
+export async function requestUrl(_options: unknown): Promise<{
+	status: number;
+	headers: Record<string, string>;
+	arrayBuffer: ArrayBuffer;
+}> {
+	return { status: 200, headers: {}, arrayBuffer: new ArrayBuffer(0) };
+}
+
 export class Plugin {
 	app!: App;
 	manifest = { id: 'test', name: 'Test', version: '0.0.0', minAppVersion: '1.0.0', author: '', description: '' };
@@ -76,6 +84,30 @@ export class Plugin {
 	async saveData(_data: unknown): Promise<void> { /* noop */ }
 	async onload(): Promise<void> { /* noop */ }
 	onunload(): void { /* noop */ }
+}
+
+export class Component {
+	private cleanupCallbacks: Array<() => void> = [];
+
+	register(callback: () => void): void {
+		this.cleanupCallbacks.push(callback);
+	}
+
+	unload(): void {
+		for (const callback of this.cleanupCallbacks.splice(0)) {
+			callback();
+		}
+	}
+}
+
+export class MarkdownRenderChild extends Component {
+	constructor(public containerEl: HTMLElement) {
+		super();
+	}
+}
+
+export interface MarkdownPostProcessorContext {
+	addChild(child: MarkdownRenderChild): void;
 }
 
 export class PluginSettingTab {

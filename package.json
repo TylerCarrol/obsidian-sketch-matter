@@ -17,7 +17,9 @@
 	"license": "MIT",
 	"devDependencies": {
 		"@eslint/js": "^9.39.4",
+		"@types/d3-geo": "^3.1.1",
 		"@types/node": "^22.15.17",
+		"@types/three": "^0.186.0",
 		"esbuild": "0.28.1",
 		"eslint": "^9.39.4",
 		"eslint-plugin-obsidianmd": "^0.4.0",
@@ -31,5 +33,10 @@
 	},
 	"allowScripts": {
 		"esbuild@0.25.5": true
+	},
+	"dependencies": {
+		"d3-geo": "^3.1.1",
+		"d3-geo-projection": "^4.0.0",
+		"three": "^0.186.1"
 	}
 }

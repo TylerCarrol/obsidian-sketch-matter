@@ -2,6 +2,8 @@ import { ItemView, Notice, Plugin, WorkspaceLeaf, setIcon } from 'obsidian';
 import {
 	DEFAULT_SETTINGS,
 	GridType,
+	MapProjection,
+	PreviewMode,
 	SketchMatterObject,
 	SketchMatterSettings,
 	SketchMatterViewDefinition,
@@ -30,6 +32,8 @@ import {
 } from './editor';
 import { renderObjectList, renderObjectDetail } from './ui/editor-panel';
 import { convertPropertyInput } from './property-value';
+import { GlobePreviewHandle, renderGlobePreview } from './globe/globe-preview';
+import { MAP_PROJECTIONS, resolveMapProjection } from './globe/projection';
 
 export const VIEW_TYPE_SKETCH_MATTER = 'sketch-matter-view';
 const PREVIEW_PAN_START_THRESHOLD = 2;
@@ -58,6 +62,7 @@ statusElement: HTMLElement | null = null;
 currentViewId: string | null = null;
 currentImageId: string | null = null;
 gridType: GridType = 'none';
+previewMode: PreviewMode = '2d';
 editMode = false;
 snapMode: SnapMode = 'disabled';
 draggingEnabled = false;
@@ -68,6 +73,8 @@ private editorOverlayHandle: EditorOverlayHandle | null = null;
 private currentFilteredObjects: SketchMatterObject[] = [];
 private metadataBundle: SketchMatterMetadataBundle | null = null;
 private zoomResetButton: HTMLButtonElement | null = null;
+private globeProjectionOverride: MapProjection | null = null;
+private globeHandle: GlobePreviewHandle | null = null;
 private previewPanState:
 	| {
 		pointerId: number;
@@ -111,6 +118,11 @@ this.containerEl.addClass('sketchmatter-view');
 await this.renderView();
 }
 
+async onClose(): Promise<void> {
+	this.globeHandle?.dispose();
+	this.globeHandle = null;
+}
+
 async reload(): Promise<void> {
 this.metadataBundle = null;
 await this.renderView();
@@ -125,6 +137,8 @@ private getMetadataBundle(): SketchMatterMetadataBundle {
 }
 
 private async renderView(): Promise<void> {
+	this.globeHandle?.dispose();
+	this.globeHandle = null;
 const previousViewId = this.selector?.value || this.currentViewId;
 this.currentViewId = previousViewId;
 const previousImageId = this.imageSelector?.value || this.currentImageId;
@@ -166,7 +180,9 @@ const editButton = this.createPreviewButton(buttonPanel, {
 		? 'sketchmatter-edit-button sketchmatter-edit-button-active'
 		: 'sketchmatter-edit-button',
 });
+editButton.disabled = this.previewMode === 'globe';
 editButton.addEventListener('click', () => {
+	if (this.previewMode === 'globe') return;
 this.editMode = !this.editMode;
 if (!this.editMode) {
 	this.selectedObjectPath = null;
@@ -175,6 +191,7 @@ void this.renderView();
 });
 
 const zoomControls = buttonPanel.createDiv({ cls: 'sketchmatter-zoom-controls' });
+zoomControls.hidden = this.previewMode === 'globe';
 const zoomOutButton = this.createPreviewButton(zoomControls, {
 	label: 'Zoom out',
 	icon: 'minus',
@@ -209,6 +226,7 @@ imageLabel.createSpan({ text: 'Image' });
 this.imageSelector = imageLabel.createEl('select', { cls: 'sketchmatter-image-selector' });
 this.imageSelector.addEventListener('change', () => {
 this.currentImageId = this.imageSelector?.value || null;
+this.globeProjectionOverride = null;
 void this.renderView();
 });
 
@@ -220,7 +238,25 @@ this.currentViewId = this.selector?.value || null;
 void this.renderView();
 });
 
+const modeLabel = controls.createEl('label', { cls: 'sketchmatter-control-label sketchmatter-preview-mode-control' });
+modeLabel.createSpan({ text: '2D' });
+const modeToggle = modeLabel.createEl('input', { cls: 'sketchmatter-preview-mode-toggle' });
+modeToggle.type = 'checkbox';
+modeToggle.checked = this.previewMode === 'globe';
+modeToggle.setAttribute('role', 'switch');
+modeToggle.setAttribute('aria-label', 'Show globe preview');
+modeLabel.createSpan({ text: '3D' });
+modeToggle.addEventListener('change', () => {
+	this.previewMode = modeToggle.checked ? 'globe' : '2d';
+	if (this.previewMode === 'globe') {
+		this.editMode = false;
+		this.selectedObjectPath = null;
+	}
+	void this.renderView();
+});
+
 const gridLabel = controls.createEl('label', { cls: 'sketchmatter-control-label' });
+gridLabel.hidden = this.previewMode === 'globe';
 gridLabel.createSpan({ text: 'Grid' });
 const gridSelector = gridLabel.createEl('select', { cls: 'sketchmatter-grid-selector' });
 const gridOptions: Array<{ value: GridType; label: string }> = [
@@ -238,7 +274,7 @@ gridSelector.addEventListener('change', () => {
 	void this.renderView();
 });
 
-if (this.gridType !== 'none') {
+if (this.previewMode === '2d' && this.gridType !== 'none') {
 	const spacingLabel = controls.createEl('label', {
 		cls: 'sketchmatter-control-label sketchmatter-grid-spacing-control',
 	});
@@ -278,6 +314,7 @@ if (this.gridType !== 'none') {
 }
 
 const snapModeLabel = controls.createEl('label', { cls: 'sketchmatter-control-label' });
+snapModeLabel.hidden = this.previewMode === 'globe';
 snapModeLabel.createSpan({ text: 'Snap mode' });
 const snapModeSelector = snapModeLabel.createEl('select', { cls: 'sketchmatter-snap-mode-selector' });
 const snapModeOptions: Array<{ value: SnapMode; label: string }> = [
@@ -296,6 +333,7 @@ snapModeSelector.addEventListener('change', () => {
 });
 
 const objectDraggingLabel = controls.createEl('label', { cls: 'sketchmatter-control-label' });
+objectDraggingLabel.hidden = this.previewMode === 'globe';
 objectDraggingLabel.createSpan({ text: 'Object dragging' });
 const objectDraggingSelector = objectDraggingLabel.createEl('select', { cls: 'sketchmatter-dragging-selector' });
 const objectDraggingOptions: Array<{ value: boolean; label: string }> = [
@@ -353,15 +391,17 @@ const contentArea = this.containerEl.createDiv({
 	cls: this.editMode ? 'sketchmatter-edit-mode-layout' : 'sketchmatter-content-area',
 });
 this.previewContainer = contentArea.createDiv({ cls: 'sketchmatter-preview-container' });
-		this.previewContainer.addEventListener(
+		if (this.previewMode === '2d') this.previewContainer.addEventListener(
 			'wheel',
 			(event) => {
 				this.onPreviewWheel(event);
 			},
 			{ passive: false },
 		);
-	this.registerPreviewPanHandlers(this.previewContainer);
-	this.registerPreviewTouchHandlers(this.previewContainer);
+	if (this.previewMode === '2d') {
+		this.registerPreviewPanHandlers(this.previewContainer);
+		this.registerPreviewTouchHandlers(this.previewContainer);
+	}
 
 if (this.editMode) {
 	this.editorSidebarEl = contentArea.createDiv({ cls: 'sketchmatter-editor-sidebar' });
@@ -383,20 +423,75 @@ const resolvedImageId = this.resolveImageId(selectedView, filteredObjects);
 const imageDefinition =
 	resolvedImageId != null ? (imageDefinitions.get(resolvedImageId) ?? null) : null;
 
+if (this.previewMode === 'globe') {
+	const projection = resolveMapProjection(
+		this.globeProjectionOverride,
+		imageDefinition,
+		this.plugin.settings.defaultGlobeProjection,
+	);
+	const projectionLabel = controls.createEl('label', { cls: 'sketchmatter-control-label' });
+	projectionLabel.createSpan({ text: 'Projection' });
+	const projectionSelector = projectionLabel.createEl('select', { cls: 'sketchmatter-projection-selector' });
+	for (const optionDefinition of MAP_PROJECTIONS) {
+		const option = projectionSelector.createEl('option', { text: optionDefinition.label });
+		option.value = optionDefinition.id;
+		option.selected = optionDefinition.id === projection;
+	}
+	projectionSelector.addEventListener('change', () => {
+		this.globeProjectionOverride = projectionSelector.value as MapProjection;
+		void this.renderView();
+	});
+}
+
 this.currentFilteredObjects = filteredObjects;
 
 if (this.previewContainer) {
-	renderSvgPreview(
-		this.previewContainer,
-		filteredObjects,
-		typeDefinitions,
-		this.plugin.settings.layerRenderOrder,
-		this.plugin.settings,
-		imageDefinition,
-		this.gridType,
-	);
-	this.applyPreviewZoom();
-	this.restorePreviewViewportState(previousViewport);
+	if (this.previewMode === 'globe') {
+		const previewContainer = this.previewContainer;
+		previewContainer.addClass('sketchmatter-globe-container');
+		previewContainer.createDiv({ cls: 'sketchmatter-globe-loading', text: 'Rendering globe…' });
+		const projection = resolveMapProjection(
+			this.globeProjectionOverride,
+			imageDefinition,
+			this.plugin.settings.defaultGlobeProjection,
+		);
+		this.globeHandle = renderGlobePreview({
+			container: previewContainer,
+			objects: filteredObjects,
+			typeDefinitions,
+			renderOrder: this.plugin.settings.layerRenderOrder,
+			settings: this.plugin.settings,
+			imageDefinition,
+			projection,
+			onError: (error) => {
+				if (this.previewContainer !== previewContainer) return;
+				renderSvgPreview(
+					previewContainer,
+					filteredObjects,
+					typeDefinitions,
+					this.plugin.settings.layerRenderOrder,
+					this.plugin.settings,
+					imageDefinition,
+				);
+				previewContainer.createDiv({
+					cls: 'sketchmatter-globe-error',
+					text: `3D preview unavailable: ${error.message}`,
+				});
+			},
+		});
+	} else {
+		renderSvgPreview(
+			this.previewContainer,
+			filteredObjects,
+			typeDefinitions,
+			this.plugin.settings.layerRenderOrder,
+			this.plugin.settings,
+			imageDefinition,
+			this.gridType,
+		);
+		this.applyPreviewZoom();
+		this.restorePreviewViewportState(previousViewport);
+	}
 }
 
 // ── Attach editor overlay when in edit mode ─────────────────────

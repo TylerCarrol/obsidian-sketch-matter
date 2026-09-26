@@ -1,5 +1,5 @@
-import { App, Plugin } from 'obsidian';
-import { SketchMatterObject, SketchMatterSettings } from './types';
+import { App, MarkdownPostProcessorContext, MarkdownRenderChild, Plugin } from 'obsidian';
+import { MapProjection, PreviewMode, SketchMatterObject, SketchMatterSettings } from './types';
 import {
 	collectSketchMatterMetadata,
 	collectSketchMatterTypeDefinitions,
@@ -7,16 +7,20 @@ import {
 	filterSketchMatterObjects,
 } from './metadata';
 import { renderSvgPreview } from './renderer';
+import { renderGlobePreview } from './globe/globe-preview';
+import { parseMapProjection, resolveMapProjection } from './globe/projection';
 
 type SketchMatterPluginLike = Plugin & { settings: SketchMatterSettings };
 
 interface CodeBlockParams {
 	image: string | null;
 	view: string | null;
+	mode: PreviewMode;
+	projection: MapProjection | null;
 }
 
-function parseCodeBlockParams(source: string): CodeBlockParams {
-	const params: CodeBlockParams = { image: null, view: null };
+export function parseCodeBlockParams(source: string): CodeBlockParams {
+	const params: CodeBlockParams = { image: null, view: null, mode: '2d', projection: null };
 
 	for (const line of source.split('\n')) {
 		const trimmed = line.trim();
@@ -32,6 +36,10 @@ function parseCodeBlockParams(source: string): CodeBlockParams {
 				params.image = value;
 			} else if (key === 'view' && value) {
 				params.view = value;
+			} else if (key === 'mode' && value?.toLowerCase() === 'globe') {
+				params.mode = 'globe';
+			} else if (key === 'projection') {
+				params.projection = parseMapProjection(value) ?? null;
 			}
 		}
 	}
@@ -48,8 +56,8 @@ function parseCodeBlockParams(source: string): CodeBlockParams {
  * ```
  */
 export function registerCodeBlockProcessor(plugin: SketchMatterPluginLike): void {
-	plugin.registerMarkdownCodeBlockProcessor('sketch-matter', (source, el) => {
-		renderCodeBlock(plugin.app, plugin.settings, source, el);
+	plugin.registerMarkdownCodeBlockProcessor('sketch-matter', (source, el, context) => {
+		renderCodeBlock(plugin.app, plugin.settings, source, el, context);
 	});
 }
 
@@ -58,6 +66,7 @@ function renderCodeBlock(
 	settings: SketchMatterSettings,
 	source: string,
 	container: HTMLElement,
+	context: MarkdownPostProcessorContext,
 ): void {
 	const params = parseCodeBlockParams(source);
 
@@ -78,6 +87,38 @@ function renderCodeBlock(
 		resolvedImageId != null ? (imageDefinitions.get(resolvedImageId) ?? null) : null;
 
 	container.addClass('sketchmatter-embed');
+	if (params.mode === 'globe') {
+		container.addClass('sketchmatter-globe-container');
+		container.createDiv({ cls: 'sketchmatter-globe-loading', text: 'Rendering globe…' });
+		const handle = renderGlobePreview({
+			container,
+			objects: filteredObjects,
+			typeDefinitions,
+			renderOrder: settings.layerRenderOrder,
+			settings,
+			imageDefinition,
+			projection: resolveMapProjection(params.projection, imageDefinition, settings.defaultGlobeProjection),
+			onError: (error) => {
+				renderSvgPreview(
+					container,
+					filteredObjects,
+					typeDefinitions,
+					settings.layerRenderOrder,
+					settings,
+					imageDefinition,
+				);
+				container.createDiv({
+					cls: 'sketchmatter-globe-error',
+					text: `3D preview unavailable: ${error.message}`,
+				});
+			},
+		});
+		const child = new MarkdownRenderChild(container);
+		child.register(() => handle.dispose());
+		context.addChild(child);
+		return;
+	}
+
 	renderSvgPreview(
 		container,
 		filteredObjects,

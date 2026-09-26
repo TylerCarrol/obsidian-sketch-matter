@@ -6,8 +6,14 @@ import {
 	getTypeDefinitionDescription,
 	parseCompositeChildCoordinates,
 } from '../settings';
+import { DEFAULT_SETTINGS } from '../types';
 
 describe('getTypeDefinitionDescription', () => {
+	it('provides backward-compatible globe projection defaults', () => {
+		expect(DEFAULT_SETTINGS.imageProjectionProperty).toBe('sketchmatter-projection');
+		expect(DEFAULT_SETTINGS.defaultGlobeProjection).toBe('equirectangular');
+	});
+
 	it('includes the current type name in the example tag', () => {
 		expect(getTypeDefinitionDescription('sketchmatter-type', 'continent')).toContain('sketchmatter-type/continent');
 	});

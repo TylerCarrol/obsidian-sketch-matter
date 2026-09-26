@@ -35,6 +35,7 @@ export interface SketchMatterSettings {
 	imageBackgroundColorProperty: string;
 	imageBackgroundImageProperty: string;
 	imagePreserveAspectRatioProperty: string;
+	imageProjectionProperty: string;
 	transparencyProperty: string;
 	fillProperty: string;
 	strokeProperty: string;
@@ -62,12 +63,22 @@ export interface SketchMatterSettings {
 	gridSpacing: number;
 	previewMinZoom: number;
 	previewMaxZoom: number;
+	defaultGlobeProjection: MapProjection;
 }
 
 export type LayerRenderOrder = '0-1' | '1-0';
 export type PanelOpenLocation = 'center' | 'side';
 export type ObjectEditorPropertyNames = 'raw' | 'identifier';
 export type GridType = 'none' | 'grid' | 'hex-grid';
+export type PreviewMode = '2d' | 'globe';
+export type MapProjection =
+	| 'equirectangular'
+	| 'mercator'
+	| 'miller'
+	| 'gall-peters'
+	| 'mollweide'
+	| 'robinson'
+	| 'winkel-tripel';
 
 export const DEFAULT_SETTINGS: SketchMatterSettings = {
 	panelOpenLocation: 'center',
@@ -291,6 +302,7 @@ export const DEFAULT_SETTINGS: SketchMatterSettings = {
 	imageBackgroundColorProperty: 'sketchmatter-background-color',
 	imageBackgroundImageProperty: 'sketchmatter-background-image',
 	imagePreserveAspectRatioProperty: 'sketchmatter-preserve-aspect-ratio',
+	imageProjectionProperty: 'sketchmatter-projection',
 	transparencyProperty: 'sketchmatter-opacity',
 	fillProperty: 'sketchmatter-fill',
 	strokeProperty: 'sketchmatter-stroke',
@@ -318,6 +330,7 @@ export const DEFAULT_SETTINGS: SketchMatterSettings = {
 	gridSpacing: 100,
 	previewMinZoom: 0.25,
 	previewMaxZoom: 4,
+	defaultGlobeProjection: 'equirectangular',
 };
 
 export interface SketchMatterTypeDefinition {
@@ -367,6 +380,7 @@ export interface SketchMatterImageDefinition {
 	backgroundColor?: string;
 	backgroundImage?: string;
 	preserveAspectRatio?: string;
+	projection?: MapProjection;
 	properties: Record<string, unknown>;
 }
 

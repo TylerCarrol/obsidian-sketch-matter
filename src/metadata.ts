@@ -8,6 +8,7 @@ SketchMatterTypeDefinition,
 SketchMatterViewDefinition,
 RESOLVED_TEXTURE_PROPERTY,
 } from './types';
+import { parseMapProjection } from './globe/projection';
 
 export interface SketchMatterMetadataBundle {
 	objects: SketchMatterObject[];
@@ -312,6 +313,7 @@ function getCachedMarkdownFiles(app: App): TFile[] {
 					const backgroundColorRaw: unknown = raw[settings.imageBackgroundColorProperty];
 					const backgroundImageRaw: unknown = raw[settings.imageBackgroundImageProperty];
 					const preserveAspectRatioRaw: unknown = raw[settings.imagePreserveAspectRatioProperty];
+					const projection = parseMapProjection(raw[settings.imageProjectionProperty]);
 
 					const baseDefinition = {
 						name: file.basename,
@@ -321,6 +323,7 @@ function getCachedMarkdownFiles(app: App): TFile[] {
 						backgroundImage: resolveAssetSource(app, file.path, backgroundImageRaw),
 						preserveAspectRatio:
 						typeof preserveAspectRatioRaw === 'string' ? preserveAspectRatioRaw.trim() || undefined : undefined,
+						projection,
 						properties: raw,
 					};
 

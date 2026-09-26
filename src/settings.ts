@@ -2,6 +2,7 @@ import { App, Plugin, PluginSettingTab, Setting, SettingDefinitionItem, SettingP
 import { DEFAULT_SETTINGS, SketchMatterSettings, SketchMatterTypeDefinition } from './types';
 import { getRegisteredShapeNames } from './shapes';
 import type { CompositeChild } from './shapes';
+import { MAP_PROJECTIONS } from './globe/projection';
 
 export function buildTypeDefinitionStyle(
 	currentStyle: Record<string, string | number> | null | undefined,
@@ -207,6 +208,18 @@ export class SketchMatterSettingTab extends PluginSettingTab {
 								defaultValue: DEFAULT_SETTINGS.previewMaxZoom,
 							},
 						},
+						{
+							name: 'Default globe projection',
+							desc: 'Projection used to interpret a map image when its image definition does not specify one.',
+							control: {
+								type: 'dropdown',
+								key: 'defaultGlobeProjection',
+								options: Object.fromEntries(
+									MAP_PROJECTIONS.map(({ id, label }) => [id, label]),
+								),
+								defaultValue: DEFAULT_SETTINGS.defaultGlobeProjection,
+							},
+						},
 				],
 			},
 			{
@@ -363,6 +376,11 @@ export class SketchMatterSettingTab extends PluginSettingTab {
 								'Preserve aspect ratio',
 								'Frontmatter key for SVG aspect ratio handling.',
 								'imagePreserveAspectRatioProperty',
+							),
+							this.textSetting(
+								'Projection',
+								'Frontmatter key describing how a map image is projected for globe previews.',
+								'imageProjectionProperty',
 							),
 						],
 					},
