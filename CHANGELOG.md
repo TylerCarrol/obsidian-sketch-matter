@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-09-26
+
 ### Added
 
 - Add interactive Three.js globe previews to the panel and `sketch-matter` code blocks, with drag rotation and wheel or pinch zoom.
@@ -168,7 +170,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Demo vault, including a Logo demo and sample maps.
 - Automated test coverage for metadata parsing, rendering, shapes, and noise helpers.
 
-[Unreleased]: https://github.com/TylerCarrol/obsidian-sketch-matter/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/TylerCarrol/obsidian-sketch-matter/compare/v0.11.0...HEAD
+
+[0.11.0]: https://github.com/TylerCarrol/obsidian-sketch-matter/compare/v0.10.0...v0.11.0
 
 [0.10.0]: https://github.com/TylerCarrol/obsidian-sketch-matter/compare/v0.9.0...v0.10.0
 
