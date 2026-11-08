@@ -18,6 +18,8 @@ import {
 	DEFAULT_FALLBACK_SHAPE,
 } from './shapes';
 
+import { expandSvgCanvas, SvgCanvasBounds } from './svg-canvas';
+
 const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
 export const RENDERED_OBJECT_ID_ATTR = 'data-sketchmatter-object-id';
 
@@ -935,7 +937,10 @@ function renderToSvg(
  * Draws vertical and horizontal lines at every `spacing` units and labels
  * each axis line with its coordinate value to aid point-based map drawing.
  */
-function renderGrid(svg: SVGSVGElement, width: number, height: number, spacing: number): void {
+function renderGrid(svg: SVGSVGElement, bounds: SvgCanvasBounds, spacing: number): void {
+	const { x: minX, y: minY } = bounds;
+	const width = minX + bounds.width;
+	const height = minY + bounds.height;
 	const group = createSvgElement('g');
 	group.setAttribute('class', 'sketchmatter-grid');
 
@@ -944,10 +949,10 @@ function renderGrid(svg: SVGSVGElement, width: number, height: number, spacing: 
 	const fontSize = Math.max(8, Math.min(14, spacing * 0.12));
 
 	// Vertical lines + X-axis labels along the top
-	for (let x = 0; x <= width; x += spacing) {
+	for (let x = Math.ceil(minX / spacing) * spacing; x <= width; x += spacing) {
 		const line = createSvgElement('line');
 		line.setAttribute('x1', String(x));
-		line.setAttribute('y1', '0');
+		line.setAttribute('y1', String(minY));
 		line.setAttribute('x2', String(x));
 		line.setAttribute('y2', String(height));
 		line.setAttribute('stroke', lineColor);
@@ -957,7 +962,7 @@ function renderGrid(svg: SVGSVGElement, width: number, height: number, spacing: 
 
 		const label = createSvgElement('text');
 		label.setAttribute('x', String(x + 2));
-		label.setAttribute('y', String(fontSize + 1));
+		label.setAttribute('y', String(minY + fontSize + 1));
 		label.setAttribute('fill', textColor);
 		label.setAttribute('font-size', String(fontSize));
 		label.setAttribute('font-family', 'monospace');
@@ -966,9 +971,9 @@ function renderGrid(svg: SVGSVGElement, width: number, height: number, spacing: 
 	}
 
 	// Horizontal lines + Y-axis labels along the left
-	for (let y = spacing; y <= height; y += spacing) {
+	for (let y = (Math.floor(minY / spacing) + 1) * spacing; y <= height; y += spacing) {
 		const line = createSvgElement('line');
-		line.setAttribute('x1', '0');
+		line.setAttribute('x1', String(minX));
 		line.setAttribute('y1', String(y));
 		line.setAttribute('x2', String(width));
 		line.setAttribute('y2', String(y));
@@ -978,7 +983,7 @@ function renderGrid(svg: SVGSVGElement, width: number, height: number, spacing: 
 		group.appendChild(line);
 
 		const label = createSvgElement('text');
-		label.setAttribute('x', '2');
+		label.setAttribute('x', String(minX + 2));
 		label.setAttribute('y', String(y - 2));
 		label.setAttribute('fill', textColor);
 		label.setAttribute('font-size', String(fontSize));
@@ -994,7 +999,9 @@ function renderGrid(svg: SVGSVGElement, width: number, height: number, spacing: 
  * Render a flat-top hex-tile overlay into the SVG.
  * `spacing` is the distance between the left and right vertices of each tile.
  */
-function renderHexGrid(svg: SVGSVGElement, width: number, height: number, spacing: number): void {
+function renderHexGrid(svg: SVGSVGElement, bounds: SvgCanvasBounds, spacing: number): void {
+	const width = bounds.x + bounds.width;
+	const height = bounds.y + bounds.height;
 	const group = createSvgElement('g');
 	group.setAttribute('class', 'sketchmatter-grid');
 
@@ -1003,9 +1010,10 @@ function renderHexGrid(svg: SVGSVGElement, width: number, height: number, spacin
 	const tileHeight = Math.sqrt(3) * radius;
 	const columnStep = radius * 1.5;
 
-	for (let column = -1, centerX = -columnStep; centerX <= width + columnStep; column++, centerX += columnStep) {
+	const firstColumn = Math.floor(bounds.x / columnStep) - 1;
+	for (let column = firstColumn, centerX = firstColumn * columnStep; centerX <= width + columnStep; column++, centerX += columnStep) {
 		const columnOffset = column % 2 === 0 ? 0 : tileHeight / 2;
-		for (let centerY = -tileHeight; centerY <= height + tileHeight; centerY += tileHeight) {
+		for (let centerY = (Math.floor(bounds.y / tileHeight) - 1) * tileHeight; centerY <= height + tileHeight; centerY += tileHeight) {
 			const tileCenterY = centerY + columnOffset;
 			const points = [
 				[centerX + radius, tileCenterY],
@@ -1043,25 +1051,24 @@ export function renderSvgPreview(
 	const typeDefs = typeDefinitions ?? new Map<string, SketchMatterTypeDefinition>();
 	renderToSvg(svg, objects, typeDefs, renderOrder, settings);
 
+	container.appendChild(svg);
+	const bounds = expandSvgCanvas(svg);
 	const resolvedGridType: GridType = typeof gridType === 'boolean'
 		? (gridType ? 'grid' : 'none')
 		: gridType;
 	if (resolvedGridType !== 'none') {
-		const width = imageDefinition?.width ?? 1200;
-		const height = imageDefinition?.height ?? 900;
 		const spacing = settings.gridSpacing > 0 ? settings.gridSpacing : 100;
 		if (resolvedGridType === 'hex-grid') {
-			renderHexGrid(svg, width, height, spacing);
+			renderHexGrid(svg, bounds, spacing);
 		} else {
-			renderGrid(svg, width, height, spacing);
+			renderGrid(svg, bounds, spacing);
 		}
 	}
-
-	container.appendChild(svg);
 }
 
 /**
  * Render objects to an SVG string suitable for export/saving as a file.
+ * Disable canvas expansion for georeferenced globe textures.
  */
 export function renderSvgToString(
 	objects: SketchMatterObject[],
@@ -1069,10 +1076,12 @@ export function renderSvgToString(
 	renderOrder: LayerRenderOrder = '0-1',
 	settings: SketchMatterSettings = DEFAULT_SETTINGS,
 	imageDefinition: SketchMatterImageDefinition | null = null,
+	expandCanvas = true,
 ): string {
 	const svg = createRootSvg(imageDefinition);
 	const typeDefs = typeDefinitions ?? new Map<string, SketchMatterTypeDefinition>();
 	renderToSvg(svg, objects, typeDefs, renderOrder, settings);
+	if (expandCanvas) expandSvgCanvas(svg);
 
 	const serializer = new XMLSerializer();
 	const xmlDeclaration = '<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n';

@@ -76,6 +76,17 @@
 
 /* ── Preview pane controls ─────────────────────────────────────── */
 
+.sketchmatter-view {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	min-height: 0;
+}
+
+.sketchmatter-view-header {
+	flex: 0 0 auto;
+}
+
 .sketchmatter-view-controls {
 	display: flex;
 	flex-direction: row;
@@ -315,7 +326,7 @@
 .sketchmatter-preview-container {
 	flex: 1;
 	min-width: 0;
-	min-height: 400px;
+	min-height: 0;
 	overflow: auto;
 	cursor: grab;
 	touch-action: none;
@@ -337,6 +348,12 @@
 	height: 100%;
 	max-width: none;
 	max-height: none;
+}
+
+.sketchmatter-canvas-measurement {
+	position: absolute;
+	visibility: hidden;
+	pointer-events: none;
 }
 
 .sketchmatter-globe-container {

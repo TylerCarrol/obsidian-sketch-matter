@@ -168,6 +168,11 @@ Supported frontmatter:
 
 `sketchmatter-background-image` accepts vault assets, wikilinks, absolute URLs, and data URLs.
 
+For 2D previews and SVG exports, image dimensions set the minimum canvas size.
+The canvas expands to include rendered objects outside those dimensions, including objects at negative coordinates.
+Without an image definition, the minimum canvas size is 1200 × 900.
+Backgrounds keep their configured size. Globe textures keep the fixed image dimensions for projection alignment.
+
 ## Embedding in notes
 
 Use a `sketchmatter` code block:

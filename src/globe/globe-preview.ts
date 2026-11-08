@@ -105,6 +105,7 @@ class ThreeGlobePreview implements GlobePreviewHandle {
 			renderOrder,
 			settings,
 			imageDefinition,
+			false,
 		);
 		const textureCanvas = await createGlobeTextureCanvas(
 			svgContent,

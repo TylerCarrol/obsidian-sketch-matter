@@ -1,10 +1,117 @@
-import { describe, it, expect } from 'vitest';
+import { beforeEach, describe, it, expect, vi } from 'vitest';
 import { renderSvgPreview, renderSvgToString } from '../renderer';
 import { collectSketchMatterTypeDefinitions } from '../metadata';
 import { DEFAULT_SETTINGS, SketchMatterObject } from '../types';
 import { TFile } from '../__mocks__/obsidian';
 // Register all built-in shapes so polygon/polyline etc. are available.
 import '../shapes/index';
+
+const getBBox = vi.fn(() => ({ x: 0, y: 0, width: 0, height: 0 }));
+
+beforeEach(() => {
+	getBBox.mockReset();
+	getBBox.mockReturnValue({ x: 0, y: 0, width: 0, height: 0 });
+	Object.defineProperty(SVGElement.prototype, 'getBBox', {
+		configurable: true,
+		value: getBBox,
+	});
+});
+
+describe('SVG canvas bounds', () => {
+	it('includes Earth-sized artwork without an image definition in previews and exports', () => {
+		getBBox.mockReturnValue({ x: 10, y: 10, width: 4390, height: 2190 });
+		const objects = [makeObject('large', 'polygon', ['10, 10', '4400, 10', '4400, 2200'])];
+		const container = document.createElement('div');
+
+		renderSvgPreview(container, objects);
+		const svg = container.querySelector('svg')!;
+		const [x, y, width, height] = svg.getAttribute('viewBox')!.split(' ').map(Number);
+		expect(x! + width!).toBeGreaterThanOrEqual(4400);
+		expect(y! + height!).toBeGreaterThanOrEqual(2200);
+		expect(svg.getAttribute('width')).toBe(String(width));
+		expect(svg.getAttribute('height')).toBe(String(height));
+		expect(renderSvgToString(objects)).toContain(`viewBox="${svg.getAttribute('viewBox')}"`);
+		expect(container.firstElementChild).toBe(svg);
+	});
+
+	it('expands explicit dimensions and includes negative coordinates and strokes', () => {
+		getBBox.mockReturnValue({ x: -100, y: -50, width: 1800, height: 1000 });
+		const objects = [makeObject('outside', 'polygon', ['-100, -50', '1700, -50', '1700, 950'], {
+			[DEFAULT_SETTINGS.strokeWidthProperty]: 20,
+		})];
+		const container = document.createElement('div');
+		const image = { id: 'small', name: 'Small', width: 640, height: 480, properties: {} };
+		renderSvgPreview(container, objects, undefined, '0-1', DEFAULT_SETTINGS, image, 'grid');
+
+		const [x, y, width, height] = container.querySelector('svg')!.getAttribute('viewBox')!.split(' ').map(Number);
+		expect(x).toBeLessThanOrEqual(-110);
+		expect(y).toBeLessThanOrEqual(-60);
+		expect(x! + width!).toBeGreaterThanOrEqual(1710);
+		expect(y! + height!).toBeGreaterThanOrEqual(960);
+		expect(container.querySelector('.sketchmatter-grid line[y1]')?.getAttribute('y1')).toBe(String(y));
+	});
+
+	it('retains the minimum canvas when artwork fits inside it', () => {
+		getBBox.mockReturnValue({ x: 100, y: 100, width: 200, height: 100 });
+		const objects = [makeObject('inside', 'polygon', ['100, 100', '300, 100', '300, 200'])];
+		expect(renderSvgToString(objects)).toContain('viewBox="0 0 1200 900"');
+	});
+
+	it('includes rotated geometry and stroke miter joins', () => {
+		getBBox.mockReturnValue({ x: 1100, y: 850, width: 300, height: 200 });
+		const objects = [makeObject('rotated', 'polygon', ['1100, 850', '1400, 850', '1400, 1050'], {
+			[DEFAULT_SETTINGS.angleProperty]: 45,
+			[DEFAULT_SETTINGS.strokeWidthProperty]: 20,
+		})];
+		const svgContent = renderSvgToString(objects);
+		expect(svgContent).toContain('rotate(45');
+		expect(svgContent).toContain('viewBox="0 0 1440 1090"');
+	});
+
+	it('includes outward blend halos beyond geometric bounds', () => {
+		getBBox.mockReturnValue({ x: 1100, y: 850, width: 300, height: 200 });
+		const objects = [makeObject('blended', 'polygon', ['1100, 850', '1400, 850', '1400, 1050'], {
+			[DEFAULT_SETTINGS.fillProperty]: '#cc8844',
+			[DEFAULT_SETTINGS.blendProperty]: true,
+			[DEFAULT_SETTINGS.blendOverflowProperty]: 20,
+		})];
+		const container = document.createElement('div');
+		renderSvgPreview(container, objects);
+		const [, , width, height] = container.querySelector('svg')!.getAttribute('viewBox')!.split(' ').map(Number);
+		expect(width).toBeGreaterThanOrEqual(1441);
+		expect(height).toBeGreaterThanOrEqual(1091);
+	});
+
+	it('extends hex grids into negative coordinates without resizing around grid overflow', () => {
+		getBBox.mockReturnValue({ x: -300, y: -200, width: 1600, height: 1200 });
+		const objects = [makeObject('negative', 'polygon', ['-300, -200', '1300, -200', '1300, 1000'])];
+		const container = document.createElement('div');
+		renderSvgPreview(container, objects, undefined, '0-1', DEFAULT_SETTINGS, null, 'hex-grid');
+		const svg = container.querySelector('svg')!;
+		const point = container.querySelector('.sketchmatter-grid polygon')!.getAttribute('points')!.split(' ')[0]!.split(',').map(Number);
+		expect(point[0]).toBeLessThan(-300);
+		expect(point[1]).toBeLessThan(-200);
+		expect(renderSvgToString(objects)).toContain(`viewBox="${svg.getAttribute('viewBox')}"`);
+	});
+
+	it('keeps globe source dimensions fixed without measuring geometry', () => {
+		const objects = [makeObject('outside', 'polygon', ['0, 0', '4400, 0', '4400, 2200'])];
+		expect(renderSvgToString(objects, undefined, '0-1', DEFAULT_SETTINGS, null, false))
+			.toContain('viewBox="0 0 1200 900"');
+		expect(getBBox).not.toHaveBeenCalled();
+	});
+
+	it('measures detached SVGs in the document and cleans up after errors', () => {
+		const originalChildren = document.body.childElementCount;
+		getBBox.mockImplementation(function (this: SVGElement) {
+			expect(this.isConnected).toBe(true);
+			throw new Error('Measurement failed');
+		});
+		const objects = [makeObject('outside', 'polygon', ['0, 0', '4400, 0', '4400, 2200'])];
+		expect(() => renderSvgToString(objects)).toThrow('Measurement failed');
+		expect(document.body.childElementCount).toBe(originalChildren);
+	});
+});
 
 // ---------------------------------------------------------------------------
 // Helpers
