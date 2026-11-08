@@ -6,13 +6,32 @@ export interface SvgCanvasBounds {
 }
 
 /** Measure rendered geometry, including child transforms, in SVG coordinates. */
-export function expandSvgCanvas(svg: SVGSVGElement): SvgCanvasBounds {
+export function expandSvgCanvas(
+	svg: SVGSVGElement,
+	minimumBounds?: SvgCanvasBounds,
+): SvgCanvasBounds {
 	const [x = 0, y = 0, width = 1200, height = 900] =
 		(svg.getAttribute('viewBox') ?? '').split(/\s+/).map(Number);
 	let minX = x;
 	let minY = y;
 	let maxX = x + width;
 	let maxY = y + height;
+	if (
+		minimumBounds &&
+		[
+			minimumBounds.x,
+			minimumBounds.y,
+			minimumBounds.width,
+			minimumBounds.height,
+		].every(Number.isFinite) &&
+		minimumBounds.width >= 0 &&
+		minimumBounds.height >= 0
+	) {
+		minX = Math.min(minX, minimumBounds.x);
+		minY = Math.min(minY, minimumBounds.y);
+		maxX = Math.max(maxX, minimumBounds.x + minimumBounds.width);
+		maxY = Math.max(maxY, minimumBounds.y + minimumBounds.height);
+	}
 	const parent = svg.parentNode;
 	const nextSibling = svg.nextSibling;
 	let measurementHost: HTMLDivElement | null = null;

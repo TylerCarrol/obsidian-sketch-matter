@@ -57,6 +57,25 @@ describe('SVG canvas bounds', () => {
 		expect(renderSvgToString(objects)).toContain('viewBox="0 0 1200 900"');
 	});
 
+	it('retains previously expanded preview bounds when re-rendering', () => {
+		const container = document.createElement('div');
+		const previousBounds = { x: -200, y: -100, width: 1700, height: 1200 };
+
+		const bounds = renderSvgPreview(
+			container,
+			[],
+			undefined,
+			'0-1',
+			DEFAULT_SETTINGS,
+			null,
+			'none',
+			previousBounds,
+		);
+
+		expect(bounds).toEqual(previousBounds);
+		expect(container.querySelector('svg')?.getAttribute('viewBox')).toBe('-200 -100 1700 1200');
+	});
+
 	it('includes rotated geometry and stroke miter joins', () => {
 		getBBox.mockReturnValue({ x: 1100, y: 850, width: 300, height: 200 });
 		const objects = [makeObject('rotated', 'polygon', ['1100, 850', '1400, 850', '1400, 1050'], {

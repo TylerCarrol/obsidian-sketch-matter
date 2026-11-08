@@ -1044,7 +1044,8 @@ export function renderSvgPreview(
 	settings: SketchMatterSettings = DEFAULT_SETTINGS,
 	imageDefinition: SketchMatterImageDefinition | null = null,
 	gridType: GridType | boolean = 'none',
-): void {
+	minimumBounds?: SvgCanvasBounds,
+): SvgCanvasBounds {
 	container.innerHTML = '';
 	const svg = createRootSvg(imageDefinition);
 
@@ -1052,7 +1053,7 @@ export function renderSvgPreview(
 	renderToSvg(svg, objects, typeDefs, renderOrder, settings);
 
 	container.appendChild(svg);
-	const bounds = expandSvgCanvas(svg);
+	const bounds = expandSvgCanvas(svg, minimumBounds);
 	const resolvedGridType: GridType = typeof gridType === 'boolean'
 		? (gridType ? 'grid' : 'none')
 		: gridType;
@@ -1064,6 +1065,7 @@ export function renderSvgPreview(
 			renderGrid(svg, bounds, spacing);
 		}
 	}
+	return bounds;
 }
 
 /**
