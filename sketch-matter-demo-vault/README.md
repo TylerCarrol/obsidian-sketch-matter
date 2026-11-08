@@ -14,6 +14,8 @@
 - [[Fantasy Map]]
 - [[Earth]]
 
+The Fantasy Map includes [[Fantasy Map/circle-example|a circle object example]] with a configurable radius.
+
 ---
 ## Bases
 - [[SketchMatter.base]]

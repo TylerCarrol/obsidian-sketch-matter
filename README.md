@@ -266,6 +266,7 @@ All user-facing frontmatter and tag-prefix keys are configurable in plugin setti
 - `sketchmatter-shape`
 - `sketchmatter-children`
 - `sketchmatter-coordinates`
+- `sketchmatter-radius`
 - `sketchmatter-image-id`
 - `sketchmatter-label-coordinates`
 - `sketchmatter-label-text`

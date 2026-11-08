@@ -223,12 +223,23 @@ describe('CircleShape', () => {
 		expect(el.getAttribute('r')).toBe('10'); // default radius
 	});
 
-	it('respects the "radius" property override', () => {
+	it('respects the configured radius property', () => {
+		const elements = renderShape(shape, ['0, 0'], { [DEFAULT_SETTINGS.radiusProperty]: 25 });
+		expect(elements![0]!.getAttribute('r')).toBe('25');
+	});
+
+	it('respects a custom radius property key', () => {
+		const settings = { ...DEFAULT_SETTINGS, radiusProperty: 'custom-radius' };
+		const elements = renderShape(shape, ['0, 0'], { 'custom-radius': 30 }, settings);
+		expect(elements![0]!.getAttribute('r')).toBe('30');
+	});
+
+	it('respects the legacy "radius" property alias', () => {
 		const elements = renderShape(shape, ['0, 0'], { radius: 25 });
 		expect(elements![0]!.getAttribute('r')).toBe('25');
 	});
 
-	it('respects the "r" shorthand property', () => {
+	it('respects the legacy "r" shorthand property', () => {
 		const elements = renderShape(shape, ['0, 0'], { r: 42 });
 		expect(elements![0]!.getAttribute('r')).toBe('42');
 	});

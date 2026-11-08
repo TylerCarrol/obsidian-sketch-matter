@@ -138,6 +138,7 @@ The table below maps every `SketchMatterSettings` field to its default value. Wh
 | `objectChildrenProperty` | `sketchmatter-children` | Frontmatter key for object-level child shape arrays |
 | `layerRenderOrder` | `0-1` | Whether lower or higher layers render first |
 | `coordinatesProperty` | `sketchmatter-coordinates` | Frontmatter key for coordinate data |
+| `radiusProperty` | `sketchmatter-radius` | Frontmatter key for circle radius |
 | `labelCoordinatesProperty` | `sketchmatter-label-coordinates` | Frontmatter key for label-specific coordinate data |
 | `labelTextProperty` | `sketchmatter-label-text` | Frontmatter key for label text content |
 | `fontFamilyProperty` | `sketchmatter-font-family` | Frontmatter key for label font family |

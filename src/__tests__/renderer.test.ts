@@ -329,6 +329,26 @@ describe('renderSvgToString — configurable object shape and children keys', ()
 		expect(svgContent).not.toContain('<polygon');
 	});
 
+	it('renders circle radius from the configured frontmatter property', () => {
+		const settings = {
+			...DEFAULT_SETTINGS,
+			radiusProperty: 'custom-radius',
+		};
+		const object = makeObject(
+			'custom-radius-circle',
+			'landmark',
+			['50, 60'],
+			{
+				[DEFAULT_SETTINGS.objectShapeProperty]: 'circle',
+				'custom-radius': 42,
+			},
+		);
+
+		const svgContent = renderSvgToString([object], undefined, '0-1', settings, null);
+		expect(svgContent).toContain('<circle');
+		expect(svgContent).toContain('r="42"');
+	});
+
 	it('keeps the configured label shape when a shared note overrides its geometry shape', () => {
 		const properties = {
 			[DEFAULT_SETTINGS.objectShapeProperty]: 'rect',

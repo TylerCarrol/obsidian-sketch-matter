@@ -3,7 +3,8 @@ import { SvgShape, ShapeRenderContext, createSvgElement, toCoordinatePairs } fro
 /**
  * Renders a circle at a given center point with a radius.
  * Coordinates should be a single point [cx, cy].
- * Radius is taken from the object's `radius` or `r` property (default: 10).
+ * Radius is taken from the configured property (default: sketchmatter-radius),
+ * with `radius` and `r` kept as legacy aliases (default radius: 10).
  */
 export class CircleShape extends SvgShape {
 	readonly name = 'circle';
@@ -28,7 +29,7 @@ export class CircleShape extends SvgShape {
 
 	private resolveRadius(context: ShapeRenderContext): number {
 		const props = context.object.properties;
-		const raw = props['radius'] ?? props['r'];
+		const raw = props[context.settings.radiusProperty] ?? props['radius'] ?? props['r'];
 		if (raw != null) {
 			const parsed = Number(raw);
 			if (Number.isFinite(parsed) && parsed > 0) {
