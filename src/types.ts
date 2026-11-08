@@ -16,6 +16,7 @@ export interface SketchMatterSettings {
 	objectShapeProperty: string;
 	objectChildrenProperty: string;
 	angleProperty: string;
+	radiusProperty: string;
 	rectWidthProperty: string;
 	rectHeightProperty: string;
 	rectRxProperty: string;
@@ -295,6 +296,7 @@ export const DEFAULT_SETTINGS: SketchMatterSettings = {
 	imageWidthProperty: 'sketchmatter-width',
 	imageHeightProperty: 'sketchmatter-height',
 	angleProperty: 'sketchmatter-angle',
+	radiusProperty: 'sketchmatter-radius',
 	rectWidthProperty: 'sketchmatter-width',
 	rectHeightProperty: 'sketchmatter-height',
 	rectRxProperty: 'sketchmatter-rx',

@@ -14,6 +14,10 @@ describe('getTypeDefinitionDescription', () => {
 		expect(DEFAULT_SETTINGS.defaultGlobeProjection).toBe('equirectangular');
 	});
 
+	it('uses a configurable sketchmatter-prefixed circle radius property', () => {
+		expect(DEFAULT_SETTINGS.radiusProperty).toBe('sketchmatter-radius');
+	});
+
 	it('includes the current type name in the example tag', () => {
 		expect(getTypeDefinitionDescription('sketchmatter-type', 'continent')).toContain('sketchmatter-type/continent');
 	});

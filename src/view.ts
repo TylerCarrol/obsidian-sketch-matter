@@ -34,6 +34,7 @@ import { renderObjectList, renderObjectDetail } from './ui/editor-panel';
 import { convertPropertyInput } from './property-value';
 import { GlobePreviewHandle, renderGlobePreview } from './globe/globe-preview';
 import { MAP_PROJECTIONS, resolveMapProjection } from './globe/projection';
+import { SvgCanvasBounds } from './svg-canvas';
 
 export const VIEW_TYPE_SKETCH_MATTER = 'sketch-matter-view';
 const PREVIEW_PAN_START_THRESHOLD = 2;
@@ -72,6 +73,8 @@ private editorSidebarEl: HTMLElement | null = null;
 private editorOverlayHandle: EditorOverlayHandle | null = null;
 private currentFilteredObjects: SketchMatterObject[] = [];
 private metadataBundle: SketchMatterMetadataBundle | null = null;
+private readonly previewCanvasBoundsByImage = new Map<string, SvgCanvasBounds>();
+private previewViewportState: PreviewViewportState | null = null;
 private zoomResetButton: HTMLButtonElement | null = null;
 private globeProjectionOverride: MapProjection | null = null;
 private globeHandle: GlobePreviewHandle | null = null;
@@ -116,6 +119,13 @@ async onOpen(): Promise<void> {
 this.containerEl.empty();
 this.containerEl.addClass('sketchmatter-view');
 await this.renderView();
+this.registerEvent(
+	this.app.workspace.on('active-leaf-change', (leaf) => {
+		if (leaf === this.leaf) {
+			void this.reload();
+		}
+	}),
+);
 }
 
 async onClose(): Promise<void> {
@@ -398,6 +408,9 @@ this.previewContainer = contentArea.createDiv({ cls: 'sketchmatter-preview-conta
 			},
 			{ passive: false },
 		);
+			this.previewContainer.addEventListener('scroll', () => {
+				this.capturePreviewViewportState();
+			}, { passive: true });
 	if (this.previewMode === '2d') {
 		this.registerPreviewPanHandlers(this.previewContainer);
 		this.registerPreviewTouchHandlers(this.previewContainer);
@@ -480,7 +493,8 @@ if (this.previewContainer) {
 			},
 		});
 	} else {
-		renderSvgPreview(
+		const canvasKey = resolvedImageId ?? '';
+		const bounds = renderSvgPreview(
 			this.previewContainer,
 			filteredObjects,
 			typeDefinitions,
@@ -488,7 +502,9 @@ if (this.previewContainer) {
 			this.plugin.settings,
 			imageDefinition,
 			this.gridType,
+			this.previewCanvasBoundsByImage.get(canvasKey),
 		);
+		this.previewCanvasBoundsByImage.set(canvasKey, bounds);
 		this.applyPreviewZoom();
 		this.restorePreviewViewportState(previousViewport);
 	}
@@ -777,6 +793,7 @@ private resolveImageId(
 			container.scrollLeft = anchorX * zoomRatio - localX;
 			container.scrollTop = anchorY * zoomRatio - localY;
 		}
+		this.capturePreviewViewportState();
 		this.updateZoomControls();
 	}
 
@@ -824,6 +841,7 @@ private resolveImageId(
 			this.applyPreviewZoom();
 			container.scrollLeft = pinchState.scrollLeft;
 			container.scrollTop = pinchState.scrollTop;
+			this.capturePreviewViewportState();
 			this.updateZoomControls();
 			event.preventDefault();
 		};
@@ -946,33 +964,41 @@ private resolveImageId(
 		this.zoomResetButton.setAttribute('aria-label', tooltipText);
 	}
 
-		private capturePreviewViewportState(): PreviewViewportState | null {
-			if (!this.previewContainer) {
-				return null;
-			}
-			const contentWidth = this.previewContainer.scrollWidth;
-			const contentHeight = this.previewContainer.scrollHeight;
-			const centerX = this.previewContainer.scrollLeft + this.previewContainer.clientWidth / 2;
-			const centerY = this.previewContainer.scrollTop + this.previewContainer.clientHeight / 2;
+private capturePreviewViewportState(): PreviewViewportState | null {
+	const container = this.previewContainer;
+	if (!container || container.clientWidth === 0 || container.clientHeight === 0) {
+		return this.previewViewportState;
+	}
+	const contentWidth = container.scrollWidth;
+	const contentHeight = container.scrollHeight;
+	const centerX = container.scrollLeft + container.clientWidth / 2;
+	const centerY = container.scrollTop + container.clientHeight / 2;
 
-			return {
-				contentCenterXRatio: contentWidth > 0 ? centerX / contentWidth : 0.5,
-				contentCenterYRatio: contentHeight > 0 ? centerY / contentHeight : 0.5,
-			};
-		}
+	this.previewViewportState = {
+		contentCenterXRatio: contentWidth > 0 ? centerX / contentWidth : 0.5,
+		contentCenterYRatio: contentHeight > 0 ? centerY / contentHeight : 0.5,
+	};
+	return this.previewViewportState;
+}
 
-		private restorePreviewViewportState(state: PreviewViewportState | null): void {
-			if (!state || !this.previewContainer) {
-				return;
-			}
-			const targetCenterX = state.contentCenterXRatio * this.previewContainer.scrollWidth;
-			const targetCenterY = state.contentCenterYRatio * this.previewContainer.scrollHeight;
-			const targetScrollLeft = targetCenterX - this.previewContainer.clientWidth / 2;
-			const targetScrollTop = targetCenterY - this.previewContainer.clientHeight / 2;
-			const maxScrollLeft = Math.max(0, this.previewContainer.scrollWidth - this.previewContainer.clientWidth);
-			const maxScrollTop = Math.max(0, this.previewContainer.scrollHeight - this.previewContainer.clientHeight);
+private restorePreviewViewportState(state: PreviewViewportState | null): void {
+	if (!state) {
+		return;
+	}
+	this.previewViewportState = state;
+	const container = this.previewContainer;
+	if (!container || container.clientWidth === 0 || container.clientHeight === 0) {
+		return;
+	}
+	const targetCenterX = state.contentCenterXRatio * container.scrollWidth;
+	const targetCenterY = state.contentCenterYRatio * container.scrollHeight;
+	const targetScrollLeft = targetCenterX - container.clientWidth / 2;
+	const targetScrollTop = targetCenterY - container.clientHeight / 2;
+	const maxScrollLeft = Math.max(0, container.scrollWidth - container.clientWidth);
+	const maxScrollTop = Math.max(0, container.scrollHeight - container.clientHeight);
 
-			this.previewContainer.scrollLeft = Math.min(maxScrollLeft, Math.max(0, targetScrollLeft));
-			this.previewContainer.scrollTop = Math.min(maxScrollTop, Math.max(0, targetScrollTop));
-		}
+	container.scrollLeft = Math.min(maxScrollLeft, Math.max(0, targetScrollLeft));
+	container.scrollTop = Math.min(maxScrollTop, Math.max(0, targetScrollTop));
+	this.capturePreviewViewportState();
+}
 }

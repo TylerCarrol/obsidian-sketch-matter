@@ -9,8 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.12.0] - 2026-11-08
 
+### Added
+
+- Add a configurable circle radius property, defaulting to `sketchmatter-radius`, and a Fantasy Map example circle.
+
 ### Fixed
 
+- Read circle radius from the configured property while retaining support for the legacy `radius` and `r` keys.
+- Retain expanded preview bounds across redraws and refresh metadata when returning to the preview panel.
 - Expand 2D preview and export canvases to include artwork outside the image dimensions or the default canvas.
 - Let the preview shrink to fit short panes instead of clipping a 400-pixel minimum height.
 - Rotate label selection outlines with the text and preserve their angle during dragging.

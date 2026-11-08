@@ -293,6 +293,7 @@ export class SketchMatterSettingTab extends PluginSettingTab {
 								'Frontmatter key for object rotation angle in degrees.',
 								'angleProperty',
 							),
+							this.textSetting('Circle radius', 'Frontmatter key for circle radius.', 'radiusProperty'),
 							this.textSetting(
 								'Rectangle width',
 								'Frontmatter key for rectangle width. Defaults to a sketchmatter-prefixed key.',
