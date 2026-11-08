@@ -243,6 +243,8 @@ export function attachEditorOverlay(
 		isOpen: boolean;
 		isSinglePoint: boolean;
 		hitTarget: SVGElement;
+		initialPoint: [number, number];
+		renderedTransform: string | null;
 	}
 
 	interface SegmentHit {
@@ -252,7 +254,7 @@ export function attachEditorOverlay(
 		y: number;
 	}
 
-	function getRenderedObjectBounds(objectId: string): DOMRect | null {
+	function getRenderedObjectBounds(objectId: string): { bounds: DOMRect; transform: string | null } | null {
 		const selector = `[${RENDERED_OBJECT_ID_ATTR}="${CSS.escape(objectId)}"]`;
 		const elements = Array.from(svg.querySelectorAll(selector));
 		let minX = Number.POSITIVE_INFINITY;
@@ -284,7 +286,10 @@ export function attachEditorOverlay(
 		if (!foundBounds) {
 			return null;
 		}
-		return new DOMRect(minX, minY, maxX - minX, maxY - minY);
+		return {
+			bounds: new DOMRect(minX, minY, maxX - minX, maxY - minY),
+			transform: elements.length === 1 ? elements[0]!.getAttribute('transform') : null,
+		};
 	}
 
 	function updateSinglePointHitTarget(entry: EditEntry, previousPoint?: [number, number]): void {
@@ -294,6 +299,13 @@ export function attachEditorOverlay(
 
 		const [x, y] = entry.points[0]!;
 		if (entry.hitTarget.instanceOf(SVGRectElement)) {
+			if (entry.renderedTransform) {
+				// Translate in canvas coordinates before the label's original rotation.
+				const dx = x - entry.initialPoint[0];
+				const dy = y - entry.initialPoint[1];
+				entry.hitTarget.setAttribute('transform', `translate(${dx} ${dy}) ${entry.renderedTransform}`);
+				return;
+			}
 			if (previousPoint) {
 				const currentX = Number(entry.hitTarget.getAttribute('x') ?? '0');
 				const currentY = Number(entry.hitTarget.getAttribute('y') ?? '0');
@@ -302,8 +314,9 @@ export function attachEditorOverlay(
 				return;
 			}
 
-			const bounds = getRenderedObjectBounds(entry.object.objectId);
-			if (bounds) {
+			const rendered = getRenderedObjectBounds(entry.object.objectId);
+			if (rendered) {
+				const { bounds } = rendered;
 				entry.hitTarget.setAttribute('x', String(bounds.x - SINGLE_POINT_HIT_PADDING));
 				entry.hitTarget.setAttribute('y', String(bounds.y - SINGLE_POINT_HIT_PADDING));
 				entry.hitTarget.setAttribute('width', String(bounds.width + SINGLE_POINT_HIT_PADDING * 2));
@@ -370,14 +383,18 @@ export function attachEditorOverlay(
 		const isSinglePoint = points.length === 1;
 
 		let hitTarget: SVGElement;
+		let renderedTransform: string | null = null;
 		if (isSinglePoint) {
-			const bounds = getRenderedObjectBounds(object.objectId);
-			if (bounds) {
+			const rendered = getRenderedObjectBounds(object.objectId);
+			if (rendered) {
+				const { bounds, transform } = rendered;
+				renderedTransform = transform;
 				const rect = createSvgEl('rect');
 				rect.setAttribute('x', String(bounds.x - SINGLE_POINT_HIT_PADDING));
 				rect.setAttribute('y', String(bounds.y - SINGLE_POINT_HIT_PADDING));
 				rect.setAttribute('width', String(bounds.width + SINGLE_POINT_HIT_PADDING * 2));
 				rect.setAttribute('height', String(bounds.height + SINGLE_POINT_HIT_PADDING * 2));
+				if (transform) rect.setAttribute('transform', transform);
 				hitTarget = rect;
 			} else {
 				const [x, y] = points[0]!;
@@ -409,7 +426,7 @@ export function attachEditorOverlay(
 		hitTarget.setAttribute('data-source-path', object.objectId);
 
 		overlay.appendChild(hitTarget);
-		entries.push({ object, points, isOpen, isSinglePoint, hitTarget });
+		entries.push({ object, points, isOpen, isSinglePoint, hitTarget, initialPoint: [...points[0]!], renderedTransform });
 	}
 
 	let selectedEntry: EditEntry | null = null;

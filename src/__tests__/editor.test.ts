@@ -1,5 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { attachEditorOverlay } from '../editor';
+import { RENDERED_OBJECT_ID_ATTR } from '../renderer';
 import { DEFAULT_SETTINGS, SketchMatterObject } from '../types';
 import { TFile } from '../__mocks__/obsidian';
 
@@ -64,6 +65,19 @@ function pointerEvent(type: string, clientX: number, clientY: number, pointerId 
 }
 
 beforeAll(() => {
+	if (!window.SVGRectElement) {
+		vi.stubGlobal('SVGRectElement', class {});
+	}
+	if (!Element.prototype.instanceOf) {
+		Object.defineProperty(Element.prototype, 'instanceOf', {
+			configurable: true,
+			value: function (this: Element, constructor: typeof SVGElement): boolean {
+				if (constructor === SVGRectElement) return this.tagName === 'rect';
+				if (constructor === SVGGraphicsElement) return this.tagName === 'text';
+				return Object.prototype.isPrototypeOf.call(constructor.prototype, this);
+			},
+		});
+	}
 	if (!Element.prototype.setPointerCapture) {
 		Element.prototype.setPointerCapture = () => { /* noop */ };
 	}
@@ -80,6 +94,54 @@ beforeEach(() => {
 });
 
 describe('attachEditorOverlay', () => {
+	it.each([45, -30, 90, 0])('follows a label angle of %s degrees through selection and dragging', (angle) => {
+		const svg = makeSvg();
+		document.body.appendChild(svg);
+		const object = makeObject('label', ['50, 20'], 'label');
+		const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+		text.setAttribute(RENDERED_OBJECT_ID_ATTR, object.objectId);
+		const transform = `rotate(${angle} 50 20)`;
+		if (angle !== 0) text.setAttribute('transform', transform);
+		Object.defineProperty(text, 'getBBox', {
+			value: () => new DOMRect(50, 5, 80, 20),
+		});
+		svg.appendChild(text);
+		const onCoordinatesChanged = vi.fn();
+		const overlay = attachEditorOverlay(svg, [object], new Map(), DEFAULT_SETTINGS, vi.fn(), onCoordinatesChanged);
+		const target = svg.querySelector<SVGRectElement>('.sketchmatter-hit-target')!;
+		expect(target.tagName).toBe('rect');
+		expect(target.getAttribute('x')).toBe('42');
+		expect(target.getAttribute('y')).toBe('-3');
+		expect(target.getAttribute('width')).toBe('96');
+		expect(target.getAttribute('height')).toBe('36');
+		expect(target.getAttribute('transform')).toBe(angle === 0 ? null : transform);
+		expect(overlay.selectByPath(object.objectId)).toBe(true);
+
+		const [startX, startY] = userToClient([60, 20]);
+		target.dispatchEvent(pointerEvent('pointerdown', startX, startY));
+		target.dispatchEvent(pointerEvent('pointermove', startX + 20, startY + 10));
+		target.dispatchEvent(pointerEvent('pointermove', startX + 40, startY + 20));
+		target.dispatchEvent(pointerEvent('pointerup', startX + 40, startY + 20));
+		expect(onCoordinatesChanged.mock.calls[0]?.[1]).toEqual([[70, 30]]);
+		if (angle !== 0) {
+			expect(target.getAttribute('transform')).toBe(`translate(20 10) ${transform}`);
+			expect(target.getAttribute('x')).toBe('42');
+			expect(target.getAttribute('y')).toBe('-3');
+		} else {
+			expect(target.getAttribute('transform')).toBeNull();
+			expect(target.getAttribute('x')).toBe('62');
+			expect(target.getAttribute('y')).toBe('7');
+		}
+
+		const handle = svg.querySelector('.sketchmatter-handle')!;
+		const [handleX, handleY] = userToClient([70, 30]);
+		handle.dispatchEvent(pointerEvent('pointerdown', handleX, handleY));
+		handle.dispatchEvent(pointerEvent('pointermove', handleX + 20, handleY));
+		handle.dispatchEvent(pointerEvent('pointerup', handleX + 20, handleY));
+		expect(onCoordinatesChanged.mock.calls[1]?.[1]).toEqual([[80, 30]]);
+		if (angle !== 0) expect(target.getAttribute('transform')).toBe(`translate(30 10) ${transform}`);
+	});
+
 	it('drags a handle without snapping to pointer position', () => {
 		const svg = makeSvg();
 		document.body.appendChild(svg);

@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Expand 2D preview and export canvases to include artwork outside the image dimensions or the default canvas.
 - Let the preview shrink to fit short panes instead of clipping a 400-pixel minimum height.
+- Rotate label selection outlines with the text and preserve their angle during dragging.
 
 ## [0.11.0] - 2026-09-26
 
